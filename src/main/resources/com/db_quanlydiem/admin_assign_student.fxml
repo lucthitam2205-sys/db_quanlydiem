@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane prefHeight="700.0" prefWidth="1100.0" style="-fx-background-color: #ecf0f1;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.AdminAssignStudentController">
+
+    <!-- HEADER -->
+    <top>
+        <VBox alignment="CENTER" spacing="5.0" style="-fx-background-color: white; -fx-padding: 15; -fx-border-color: #bdc3c7; -fx-border-width: 0 0 1 0;" BorderPane.alignment="CENTER">
+            <children>
+                <Label text="XẾP LỚP HỌC PHẦN" textFill="#2c3e50">
+                    <font><Font name="System Bold" size="20.0" /></font>
+                </Label>
+                <Label fx:id="lblClassInfo" text="Lớp: IT101.L01 - Nhập môn Lập trình" textFill="#3498db">
+                    <font><Font name="System Bold" size="14.0" /></font>
+                </Label>
+            </children>
+        </VBox>
+    </top>
+
+    <center>
+        <HBox spacing="10.0" BorderPane.alignment="CENTER">
+            <padding><Insets bottom="10.0" left="10.0" right="10.0" top="10.0" /></padding>
+            <children>
+
+                <!-- BẢNG TRÁI: SINH VIÊN CHƯA VÀO LỚP -->
+                <VBox spacing="10.0" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label text="Sinh viên chưa đăng ký" textFill="#7f8c8d"><font><Font name="System Bold" size="12.0" /></font></Label>
+                        <TextField fx:id="txtSearchAvailable" promptText="Tìm theo tên hoặc mã..." />
+                        <TableView fx:id="tableAvailable" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colAvailID" prefWidth="80.0" text="Mã SV" />
+                                <TableColumn fx:id="colAvailName" prefWidth="150.0" text="Họ tên" />
+                                <TableColumn fx:id="colAvailMajor" prefWidth="100.0" text="Lớp/Ngành" />
+                            </columns>
+                            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
+                        </TableView>
+                    </children>
+                </VBox>
+
+                <!-- CÁC NÚT ĐIỀU KHIỂN GIỮA -->
+                <VBox alignment="CENTER" spacing="15.0" minWidth="60.0">
+                    <children>
+                        <Button mnemonicParsing="false" onAction="#handleAddStudent" style="-fx-background-color: #27ae60; -fx-cursor: hand;" text="&gt;&gt;" textFill="WHITE">
+                            <font><Font name="System Bold" size="14.0" /></font>
+                        </Button>
+                        <Button mnemonicParsing="false" onAction="#handleRemoveStudent" style="-fx-background-color: #c0392b; -fx-cursor: hand;" text="&lt;&lt;" textFill="WHITE">
+                            <font><Font name="System Bold" size="14.0" /></font>
+                        </Button>
+                    </children>
+                </VBox>
+
+                <!-- BẢNG PHẢI: SINH VIÊN ĐÃ TRONG LỚP -->
+                <VBox spacing="10.0" HBox.hgrow="ALWAYS">
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <children>
+                                <Label text="Danh sách lớp hiện tại" textFill="#27ae60"><font><Font name="System Bold" size="12.0" /></font></Label>
+                                <Label fx:id="lblCount" text="(0/60)" textFill="#7f8c8d" />
+                            </children>
+                        </HBox>
+                        <TextField fx:id="txtSearchEnrolled" promptText="Tìm trong lớp..." />
+                        <TableView fx:id="tableEnrolled" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colEnrollID" prefWidth="80.0" text="Mã SV" />
+                                <TableColumn fx:id="colEnrollName" prefWidth="150.0" text="Họ tên" />
+                                <TableColumn fx:id="colEnrollMajor" prefWidth="100.0" text="Lớp/Ngành" />
+                            </columns>
+                            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
+                        </TableView>
+                    </children>
+                </VBox>
+
+            </children>
+        </HBox>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" style="-fx-padding: 10; -fx-background-color: white; -fx-border-color: #bdc3c7; -fx-border-width: 1 0 0 0;" BorderPane.alignment="CENTER">
+            <children>
+                <Button mnemonicParsing="false" onAction="#handleClose" prefWidth="100.0" style="-fx-background-color: #7f8c8d;" text="Đóng" textFill="WHITE" />
+            </children>
+        </HBox>
+    </bottom>
+</BorderPane>

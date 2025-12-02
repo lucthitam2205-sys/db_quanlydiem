@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.StudentDashboardController">
+<BorderPane prefHeight="700.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.StudentDashboardController">
 
     <!-- 1. SIDEBAR: THÔNG TIN CÁ NHÂN (BÊN TRÁI) -->
     <left>

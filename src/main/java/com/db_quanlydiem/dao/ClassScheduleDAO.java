@@ -8,9 +8,8 @@ import java.util.List;
 
 public class ClassScheduleDAO {
 
-    // 1. Lấy tất cả lịch học (kèm tên lớp để hiển thị cho dễ)
-    // Lưu ý: Model hiện tại chỉ map bảng ClassSchedule, nếu muốn hiện tên lớp thì cần JOIN,
-    // nhưng để đơn giản ta sẽ load mã lớp trước.
+    // ... (Các hàm cũ giữ nguyên) ...
+    // 1. Lấy tất cả lịch học
     public List<ClassSchedule> getAllSchedules() {
         List<ClassSchedule> list = new ArrayList<>();
         String sql = "SELECT * FROM ClassSchedule ORDER BY CourseClassID, DayOfWeek";
@@ -67,7 +66,7 @@ public class ClassScheduleDAO {
         } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
-    // 5. Tìm kiếm theo Mã lớp hoặc Phòng
+    // 5. Tìm kiếm
     public List<ClassSchedule> searchSchedule(String keyword) {
         List<ClassSchedule> list = new ArrayList<>();
         String sql = "SELECT * FROM ClassSchedule WHERE CourseClassID LIKE ? OR Room LIKE ?";
@@ -76,6 +75,53 @@ public class ClassScheduleDAO {
             String k = "%" + keyword + "%";
             pstmt.setString(1, k);
             pstmt.setString(2, k);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                list.add(new ClassSchedule(
+                        rs.getInt("ScheduleID"),
+                        rs.getString("CourseClassID"),
+                        rs.getString("DayOfWeek"),
+                        rs.getString("Shift"),
+                        rs.getString("Room")
+                ));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return list;
+    }
+
+    // 6. Lấy lịch học theo Lớp
+    public List<ClassSchedule> getScheduleByClass(String courseClassID) {
+        List<ClassSchedule> list = new ArrayList<>();
+        String sql = "SELECT * FROM ClassSchedule WHERE CourseClassID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, courseClassID);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                list.add(new ClassSchedule(
+                        rs.getInt("ScheduleID"),
+                        rs.getString("CourseClassID"),
+                        rs.getString("DayOfWeek"),
+                        rs.getString("Shift"),
+                        rs.getString("Room")
+                ));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return list;
+    }
+
+    // 7. Lấy lịch dạy theo Giảng viên (HÀM MỚI)
+    public List<ClassSchedule> getSchedulesByProfessor(String professorID) {
+        List<ClassSchedule> list = new ArrayList<>();
+        // Join với bảng CourseClass để lọc theo ProfessorID
+        String sql = "SELECT cs.* FROM ClassSchedule cs " +
+                "JOIN CourseClass cc ON cs.CourseClassID = cc.CourseClassId " +
+                "WHERE cc.ProfessorID = ? " +
+                "ORDER BY FIELD(cs.DayOfWeek, 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'), cs.Shift";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, professorID);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 list.add(new ClassSchedule(

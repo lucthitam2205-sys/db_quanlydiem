@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 public class ProfessorDashboardController implements Initializable {
 
     // --- 1. KHAI BÁO FXML ---
-    @FXML private Label lblProfName, lblProfID, lblTitle, lblPhone, lblEmail;
+    @FXML private Label lblProfName, lblProfID, lblTitle, lblPhone, lblEmail, lblHometown; // Đã thêm lblHometown
     @FXML private ComboBox<CourseClass> cbClass;
     @FXML private TextField txtSearchStudent;
 
@@ -58,8 +58,8 @@ public class ProfessorDashboardController implements Initializable {
 
     private ObservableList<Grade> gradeList = FXCollections.observableArrayList();
 
-    // Giả lập ID giảng viên (Thực tế nên lấy từ Session đăng nhập)
-    private final String CURRENT_PROFESSOR_ID = "GV001";
+    // ID Giảng viên (Giả lập - Trong thực tế sẽ set từ LoginController)
+    public static String CURRENT_PROFESSOR_ID = "GV001";
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -76,7 +76,7 @@ public class ProfessorDashboardController implements Initializable {
         cbClass.setOnAction(e -> loadGrades());
     }
 
-    // --- CÁC HÀM LOGIC CHÍNH ---
+    // --- LOGIC CHÍNH ---
 
     private void loadProfessorInfo() {
         List<Professor> professors = professorDAO.getAllProfessors();
@@ -91,6 +91,11 @@ public class ProfessorDashboardController implements Initializable {
             lblTitle.setText(currentProf.getProfessorTitle());
             lblPhone.setText(currentProf.getProfessorPhone());
             lblEmail.setText(currentProf.getProfessorEmail());
+
+            // Set quê quán nếu label tồn tại trong FXML
+            if (lblHometown != null) {
+                lblHometown.setText(currentProf.getProfessorHometown());
+            }
         }
     }
 
@@ -147,7 +152,7 @@ public class ProfessorDashboardController implements Initializable {
             Grade g = event.getRowValue();
             Double newVal = event.getNewValue();
 
-            // Xử lý null hoặc giá trị không hợp lệ
+            // Xử lý null
             if (newVal == null) newVal = 0.0;
 
             if (property.equals("gradeAssessment1")) g.setGradeAssessment1(newVal);
@@ -176,6 +181,7 @@ public class ProfessorDashboardController implements Initializable {
 
     private void updateStatistics() {
         if (gradeList.isEmpty()) {
+            // Reset text về 0 nếu list trống
             lblTotalStudents.setText("0");
             lblRateExcellent.setText("0%");
             lblRateGood.setText("0%");
@@ -188,7 +194,7 @@ public class ProfessorDashboardController implements Initializable {
         long excellent = gradeList.stream().filter(g -> g.getGradeAverage() >= 8.5).count();
         long good = gradeList.stream().filter(g -> g.getGradeAverage() >= 7.0 && g.getGradeAverage() < 8.5).count();
         long fair = gradeList.stream().filter(g -> g.getGradeAverage() >= 5.5 && g.getGradeAverage() < 7.0).count();
-        long average = gradeList.stream().filter(g -> g.getGradeAverage() >= 4.0 && g.getGradeAverage() < 5.5).count(); // Sửa lại logic TB
+        long average = gradeList.stream().filter(g -> g.getGradeAverage() >= 4.0 && g.getGradeAverage() < 5.5).count();
 
         lblTotalStudents.setText(String.valueOf(total));
         lblRateExcellent.setText(String.format("%.1f%%", (double)excellent/total * 100));
@@ -199,27 +205,30 @@ public class ProfessorDashboardController implements Initializable {
 
     // --- CÁC HÀM SỰ KIỆN (BUTTON ACTIONS) ---
 
+    // 1. MỞ CỬA SỔ XEM LỊCH DẠY
     @FXML
-    public void handleSaveGrades() {
-        if (gradeList.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Trống", "Không có dữ liệu để lưu.");
-            return;
-        }
+    public void handleViewSchedule(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(Main.class.getResource("professor_schedule.fxml"));
+            Parent root = loader.load();
 
-        boolean allSuccess = true;
-        for (Grade g : gradeList) {
-            if (!gradeDAO.updateGrade(g)) {
-                allSuccess = false;
-            }
-        }
+            // Truyền ID giảng viên sang để load lịch đúng
+            ProfessorScheduleController controller = loader.getController();
+            controller.setProfessorID(CURRENT_PROFESSOR_ID);
 
-        if (allSuccess) {
-            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã lưu bảng điểm thành công!");
-        } else {
-            showAlert(Alert.AlertType.ERROR, "Cảnh báo", "Có lỗi khi lưu một số dòng điểm.");
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Lịch giảng dạy cá nhân");
+            stage.initModality(Modality.APPLICATION_MODAL); // Chặn cửa sổ cha
+            stage.show();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Lỗi", "Không thể mở lịch giảng dạy: " + e.getMessage());
         }
     }
 
+    // 2. MỞ CỬA SỔ ĐIỂM DANH
     @FXML
     public void handleAttendance(ActionEvent event) {
         CourseClass selectedClass = cbClass.getValue();
@@ -248,6 +257,7 @@ public class ProfessorDashboardController implements Initializable {
         }
     }
 
+    // 3. XUẤT FILE WORD
     @FXML
     public void handleExportList(ActionEvent event) {
         CourseClass selectedClass = cbClass.getValue();
@@ -272,12 +282,7 @@ public class ProfessorDashboardController implements Initializable {
     private void exportToWord(File file, CourseClass selectedClass) {
         try (PrintWriter writer = new PrintWriter(file, "UTF-8")) {
             writer.println("<html><head><meta charset='UTF-8'>");
-            writer.println("<style>");
-            writer.println("body { font-family: 'Times New Roman'; }");
-            writer.println("table { width: 100%; border-collapse: collapse; }");
-            writer.println("th, td { border: 1px solid black; padding: 5px; text-align: center; }");
-            writer.println("th { background-color: #f2f2f2; }");
-            writer.println("</style></head><body>");
+            writer.println("<style>body { font-family: 'Times New Roman'; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid black; padding: 5px; text-align: center; } th { background-color: #f2f2f2; }</style></head><body>");
 
             writer.println("<h2 style='text-align: center;'>BẢNG ĐIỂM CHI TIẾT</h2>");
             writer.println("<p><b>Lớp học phần:</b> " + selectedClass.getCourseClassId() + " - " + selectedClass.getClassName() + "</p>");
@@ -288,8 +293,7 @@ public class ProfessorDashboardController implements Initializable {
 
             int stt = 1;
             for (Grade g : gradeList) {
-                String name = colStudentName.getCellData(g); // Lấy tên từ cột đã load
-
+                String name = colStudentName.getCellData(g);
                 writer.println("<tr>");
                 writer.println("<td>" + (stt++) + "</td>");
                 writer.println("<td>" + g.getStudentID() + "</td>");
@@ -302,15 +306,34 @@ public class ProfessorDashboardController implements Initializable {
                 writer.println("</tr>");
             }
             writer.println("</table>");
-
-            writer.println("<br/><p style='text-align: right;'>Ngày ... tháng ... năm ...</p>");
-            writer.println("<p style='text-align: right;'><b>Giảng viên xác nhận</b></p>");
             writer.println("</body></html>");
 
             showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã xuất file thành công!");
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi", "Không thể lưu file: " + e.getMessage());
+        }
+    }
+
+    // 4. LƯU ĐIỂM XUỐNG DB
+    @FXML
+    public void handleSaveGrades() {
+        if (gradeList.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Trống", "Không có dữ liệu để lưu.");
+            return;
+        }
+
+        boolean allSuccess = true;
+        for (Grade g : gradeList) {
+            if (!gradeDAO.updateGrade(g)) {
+                allSuccess = false;
+            }
+        }
+
+        if (allSuccess) {
+            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã lưu bảng điểm thành công!");
+        } else {
+            showAlert(Alert.AlertType.ERROR, "Cảnh báo", "Có lỗi khi lưu một số dòng điểm.");
         }
     }
 

@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane prefHeight="700.0" prefWidth="1000.0" style="-fx-background-color: #ecf0f1;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.AdminTuitionController">
+<BorderPane prefHeight="700.0" prefWidth="1100.0" style="-fx-background-color: #ecf0f1;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.AdminTuitionController">
 
     <!-- 1. HEADER HIỆN ĐẠI (Đã bỏ nút quay lại) -->
     <top>

@@ -2,31 +2,36 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="700.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.AttendanceController">
+<BorderPane prefHeight="700.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.AttendanceController">
 
-    <!-- 1. HEADER: ẢNH TRƯỜNG -->
+    <!-- 1. HEADER: ẢNH TRƯỜNG (GRADIENT) -->
     <top>
-        <StackPane prefHeight="100.0" style="-fx-background-color: #ecf0f1; -fx-border-color: #bdc3c7; -fx-border-width: 0 0 1 0;" BorderPane.alignment="CENTER">
+        <HBox alignment="CENTER_LEFT" spacing="20.0" style="-fx-background-color: linear-gradient(to right, #2c3e50, #3498db); -fx-padding: 20;" BorderPane.alignment="CENTER">
             <children>
-                <ImageView fitHeight="100.0" fitWidth="800.0" pickOnBounds="true" preserveRatio="true" />
-                <Label text="ĐIỂM DANH LỚP HỌC PHẦN" textFill="#2c3e50">
-                    <font>
-                        <Font name="System Bold" size="24.0" />
-                    </font>
-                </Label>
+                <VBox>
+                    <children>
+                        <Label text="ĐIỂM DANH LỚP HỌC PHẦN" textFill="WHITE">
+                            <font>
+                                <Font name="System Bold" size="24.0" />
+                            </font>
+                        </Label>
+                        <Label text="Ghi nhận chuyên cần theo lịch học" textFill="#bdc3c7" />
+                    </children>
+                </VBox>
             </children>
-        </StackPane>
+        </HBox>
     </top>
 
     <!-- 2. KHU VỰC CHÍNH: BẢNG ĐIỂM DANH -->
@@ -49,22 +54,21 @@
                                 <Font name="System Bold" size="14.0" />
                             </font>
                         </Label>
+
                         <Region HBox.hgrow="ALWAYS" />
-                        <Label text="Ngày:" textFill="#7f8c8d">
+
+                        <Label text="Chọn buổi học:" textFill="#7f8c8d">
                             <font>
                                 <Font size="14.0" />
                             </font>
                         </Label>
-                        <Label fx:id="lblDate" text="20/11/2025" textFill="#2c3e50">
-                            <font>
-                                <Font name="System Bold" size="14.0" />
-                            </font>
-                        </Label>
+                        <!-- ĐÃ THAY DATEPICKER BẰNG COMBOBOX -->
+                        <ComboBox fx:id="cbSession" prefWidth="250.0" promptText="-- Chọn ngày học --" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7; -fx-border-radius: 3;" />
                     </children>
                 </HBox>
 
                 <!-- Bảng Danh sách SV -->
-                <TableView fx:id="tableAttendance" editable="true" VBox.vgrow="ALWAYS">
+                <TableView fx:id="tableAttendance" editable="true" style="-fx-background-radius: 5; -fx-border-radius: 5; -fx-base: white;" VBox.vgrow="ALWAYS">
                     <columns>
                         <TableColumn fx:id="colSTT" prefWidth="50.0" style="-fx-alignment: CENTER;" text="STT" />
                         <TableColumn fx:id="colStudentID" prefWidth="120.0" text="Mã SV" />
@@ -91,15 +95,15 @@
     <bottom>
         <HBox alignment="CENTER" spacing="50.0" style="-fx-background-color: white; -fx-padding: 15; -fx-border-color: #bdc3c7; -fx-border-width: 1 0 0 0;" BorderPane.alignment="CENTER">
             <children>
-                <Button mnemonicParsing="false" onAction="#closeWindow" prefWidth="150.0" style="-fx-background-color: white; -fx-border-color: #34495e; -fx-border-radius: 5; -fx-background-radius: 5;" text="Quay lại" textFill="#34495e">
+                <Button mnemonicParsing="false" onAction="#closeWindow" prefWidth="150.0" style="-fx-background-color: #7f8c8d; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="Quay lại">
                     <font>
-                        <Font size="14.0" />
+                        <Font name="System Bold" size="14.0" />
                     </font>
                 </Button>
 
-                <Region HBox.hgrow="ALWAYS" /> <!-- Đẩy 2 nút ra 2 góc -->
+                <Region HBox.hgrow="ALWAYS" />
 
-                <Button mnemonicParsing="false" onAction="#saveAttendance" prefWidth="150.0" style="-fx-background-color: #27ae60; -fx-background-radius: 5;" text="Lưu thay đổi" textFill="WHITE">
+                <Button mnemonicParsing="false" onAction="#saveAttendance" prefWidth="150.0" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="Lưu thay đổi">
                     <font>
                         <Font name="System Bold" size="14.0" />
                     </font>

@@ -1,6 +1,5 @@
 package com.db_quanlydiem.controller;
 
-import com.db_quanlydiem.Main;
 import com.db_quanlydiem.dao.CourseClassDAO;
 import com.db_quanlydiem.dao.ProfessorDAO;
 import com.db_quanlydiem.dao.SemesterDAO;
@@ -14,13 +13,13 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.Parent; // Import thêm
+import javafx.scene.Scene;  // Import thêm
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.Stage;
+import javafx.stage.Modality; // Import thêm
+import javafx.stage.Stage;    // Import thêm
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -98,13 +97,9 @@ public class AdminCourseClassController implements Initializable {
         selectComboBoxItem(cbProfessor, c.getProfessorID());
     }
 
-    // Helper to select item in ComboBox by ID (Using toString override or ID matching)
-    // Note: This simple version assumes toString() or simple iteration matches.
-    // In production, better to override equals() in Models or search by ID.
     private <T> void selectComboBoxItem(ComboBox<T> cb, String id) {
         if (id == null) return;
         for (T item : cb.getItems()) {
-            // Đây là cách so sánh tạm thời, tốt nhất là Models nên có method getId() chung interface
             if (item instanceof Subject && ((Subject) item).getSubjectId().equals(id)) {
                 cb.getSelectionModel().select(item); return;
             }
@@ -122,7 +117,6 @@ public class AdminCourseClassController implements Initializable {
         Subject selected = cbSubject.getValue();
         if (selected != null) {
             txtCredits.setText(String.valueOf(selected.getSubjectCredit()));
-            // Auto-generate Class ID suggestion? (Optional)
         }
     }
 
@@ -142,6 +136,40 @@ public class AdminCourseClassController implements Initializable {
         loadData();
         handleClear();
     }
+
+    // --- HÀM MỚI: Mở cửa sổ Gán Sinh viên ---
+    @FXML
+    public void handleAssignStudent() {
+        CourseClass selected = tableClass.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert(Alert.AlertType.WARNING, "Chưa chọn lớp", "Vui lòng chọn lớp học phần cần gán sinh viên!");
+            return;
+        }
+
+        try {
+            // Load file FXML của giao diện gán sinh viên
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/db_quanlydiem/admin_assign_student.fxml"));
+            Parent root = loader.load();
+
+            // Lấy controller của giao diện mới và truyền dữ liệu lớp học sang
+            AdminAssignStudentController controller = loader.getController();
+            controller.setCourseClass(selected);
+
+            // Tạo Stage mới (cửa sổ pop-up)
+            Stage stage = new Stage();
+            stage.setTitle("Quản lý danh sách lớp: " + selected.getCourseClassId());
+            stage.setScene(new Scene(root));
+
+            // Chặn tương tác với cửa sổ cha (Dashboard) cho đến khi đóng cửa sổ con
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Lỗi", "Không mở được cửa sổ gán sinh viên: " + e.getMessage());
+        }
+    }
+    // ----------------------------------------
 
     @FXML
     public void handleAdd() {
@@ -199,7 +227,7 @@ public class AdminCourseClassController implements Initializable {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Xác nhận xóa");
         alert.setHeaderText("Bạn có chắc muốn xóa lớp: " + selected.getCourseClassId() + "?");
-        Optional<ButtonType> result = alert.showAndWait();
+        Optional<ButtonType> result = alert.showAndWait(); // Sửa lỗi Optional
 
         if (result.isPresent() && result.get() == ButtonType.OK) {
             if (courseClassDAO.deleteCourseClass(selected.getCourseClassId())) {
@@ -225,22 +253,14 @@ public class AdminCourseClassController implements Initializable {
     @FXML
     public void handleBack() {
         try {
-            // Load lại trang Admin Dashboard
-            FXMLLoader loader = new FXMLLoader(Main.class.getResource("admin_dashboard.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/db_quanlydiem/admin_dashboard.fxml"));
             Parent root = loader.load();
-
-            // Lấy Stage hiện tại từ một node bất kỳ (ví dụ bảng)
-            Stage stage = (Stage) tableClass.getScene().getWindow();
-
-            // Chuyển cảnh
+            Stage stage = (Stage) txtClassID.getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.setTitle("Hệ thống Quản trị Đào tạo (Admin)");
             stage.centerOnScreen();
             stage.show();
-
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Lỗi điều hướng", "Không thể quay về Dashboard: " + e.getMessage());
         }
     }
 
