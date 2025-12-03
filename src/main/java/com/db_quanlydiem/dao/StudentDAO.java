@@ -8,7 +8,7 @@ import java.util.List;
 
 public class StudentDAO {
 
-    // Lấy danh sách toàn bộ sinh viên
+    // 1. Lấy tất cả sinh viên
     public List<Student> getAllStudents() {
         List<Student> list = new ArrayList<>();
         String sql = "SELECT * FROM Student";
@@ -18,28 +18,46 @@ public class StudentDAO {
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
-                Student s = new Student(
-                        rs.getString("StudentID"),
-                        rs.getString("StudentName"),
-                        rs.getDate("StudentDOB"),
-                        rs.getString("StudentGender"),
-                        rs.getString("StudentMajor"),
-                        rs.getString("StudentEmail"),
-                        rs.getString("StudentPhone"),
-                        rs.getString("StudentHometown"),
-                        rs.getString("ParentName"),
-                        rs.getString("ParentPhone"),
-                        rs.getString("StudentStatus")
-                );
-                list.add(s);
+                list.add(mapStudent(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return list;
     }
+
+    // 2. Thêm sinh viên mới
+    public boolean addStudent(Student s) {
+        String sql = "INSERT INTO Student (StudentID, StudentName, StudentDOB, StudentGender, StudentCohort, StudentMajor, " +
+                "StudentEmail, StudentPhone, StudentHometown, ParentName, ParentPhone, StudentStatus) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, s.getStudentID());
+            pstmt.setString(2, s.getStudentName());
+            pstmt.setDate(3, s.getStudentDOB());
+            pstmt.setString(4, s.getStudentGender());
+            pstmt.setString(5, s.getStudentCohort()); // Cột Khóa học mới
+            pstmt.setString(6, s.getStudentMajor());
+            pstmt.setString(7, s.getStudentEmail());
+            pstmt.setString(8, s.getStudentPhone());
+            pstmt.setString(9, s.getStudentHometown());
+            pstmt.setString(10, s.getParentName());
+            pstmt.setString(11, s.getParentPhone());
+            pstmt.setString(12, s.getStudentStatus());
+
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // 3. Cập nhật thông tin sinh viên
     public boolean updateStudent(Student s) {
-        String sql = "UPDATE Student SET StudentName=?, StudentDOB=?, StudentGender=?, StudentMajor=?, " +
+        String sql = "UPDATE Student SET StudentName=?, StudentDOB=?, StudentGender=?, StudentCohort=?, StudentMajor=?, " +
                 "StudentEmail=?, StudentPhone=?, StudentHometown=?, ParentName=?, ParentPhone=?, StudentStatus=? " +
                 "WHERE StudentID=?";
 
@@ -49,35 +67,7 @@ public class StudentDAO {
             pstmt.setString(1, s.getStudentName());
             pstmt.setDate(2, s.getStudentDOB());
             pstmt.setString(3, s.getStudentGender());
-            pstmt.setString(4, s.getStudentMajor());
-            pstmt.setString(5, s.getStudentEmail());
-            pstmt.setString(6, s.getStudentPhone());
-            pstmt.setString(7, s.getStudentHometown());
-            pstmt.setString(8, s.getParentName());
-            pstmt.setString(9, s.getParentPhone());
-            pstmt.setString(10, s.getStudentStatus());
-            // Điều kiện WHERE (StudentID không đổi)
-            pstmt.setString(11, s.getStudentID());
-
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-    // Thêm sinh viên mới
-    public boolean addStudent(Student s) {
-        String sql = "INSERT INTO Student (StudentID, StudentName, StudentDOB, StudentGender, StudentMajor, " +
-                "StudentEmail, StudentPhone, StudentHometown, ParentName, ParentPhone, StudentStatus) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, s.getStudentID());
-            pstmt.setString(2, s.getStudentName());
-            pstmt.setDate(3, s.getStudentDOB());
-            pstmt.setString(4, s.getStudentGender());
+            pstmt.setString(4, s.getStudentCohort());
             pstmt.setString(5, s.getStudentMajor());
             pstmt.setString(6, s.getStudentEmail());
             pstmt.setString(7, s.getStudentPhone());
@@ -85,6 +75,8 @@ public class StudentDAO {
             pstmt.setString(9, s.getParentName());
             pstmt.setString(10, s.getParentPhone());
             pstmt.setString(11, s.getStudentStatus());
+            // Điều kiện WHERE (StudentID không đổi)
+            pstmt.setString(12, s.getStudentID());
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -93,7 +85,7 @@ public class StudentDAO {
         }
     }
 
-    // Xóa sinh viên
+    // 4. Xóa sinh viên
     public boolean deleteStudent(String studentID) {
         String sql = "DELETE FROM Student WHERE StudentID = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -107,7 +99,7 @@ public class StudentDAO {
         }
     }
 
-    // Tìm kiếm sinh viên theo tên hoặc mã
+    // 5. Tìm kiếm sinh viên
     public List<Student> searchStudent(String keyword) {
         List<Student> list = new ArrayList<>();
         String sql = "SELECT * FROM Student WHERE StudentID LIKE ? OR StudentName LIKE ?";
@@ -121,23 +113,45 @@ public class StudentDAO {
 
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                list.add(new Student(
-                        rs.getString("StudentID"),
-                        rs.getString("StudentName"),
-                        rs.getDate("StudentDOB"),
-                        rs.getString("StudentGender"),
-                        rs.getString("StudentMajor"),
-                        rs.getString("StudentEmail"),
-                        rs.getString("StudentPhone"),
-                        rs.getString("StudentHometown"),
-                        rs.getString("ParentName"),
-                        rs.getString("ParentPhone"),
-                        rs.getString("StudentStatus")
-                ));
+                list.add(mapStudent(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return list;
+    }
+
+    // 6. Kiểm tra trùng mã sinh viên (Dùng khi thêm mới)
+    public boolean isStudentIDExists(String studentID) {
+        String sql = "SELECT 1 FROM Student WHERE StudentID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, studentID);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next(); // Trả về true nếu đã tồn tại
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // --- HÀM PHỤ TRỢ (HELPER) ---
+    private Student mapStudent(ResultSet rs) throws SQLException {
+        return new Student(
+                rs.getString("StudentID"),
+                rs.getString("StudentName"),
+                rs.getDate("StudentDOB"),
+                rs.getString("StudentGender"),
+                rs.getString("StudentCohort"),
+                rs.getString("StudentMajor"),
+                rs.getString("StudentEmail"),
+                rs.getString("StudentPhone"),
+                rs.getString("StudentHometown"),
+                rs.getString("ParentName"),
+                rs.getString("ParentPhone"),
+                rs.getString("StudentStatus")
+        );
     }
 }

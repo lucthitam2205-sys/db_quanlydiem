@@ -193,7 +193,7 @@ public class StudentDashboardController implements Initializable {
         String semesterID = cbSemester.getValue().getSemesterID();
         gradeList.clear();
 
-        String sql = "SELECT s.SubjectName, s.SubjectCredit, g.GradeAssessment1, g.GradeAssessment2, g.GradeFinal, g.GradeAverage, g.GradeNote " +
+        String sql = "SELECT s.SubjectName, s.SubjectCredit, g.GradeAssessment1, g.GradeAssessment2, g.GradeFinal, g.GradeNote " +
                 "FROM Grade g " +
                 "JOIN CourseClass c ON g.CourseClassID = c.CourseClassId " +
                 "JOIN Subject s ON c.SubjectId = s.SubjectId " +
@@ -214,11 +214,15 @@ public class StudentDashboardController implements Initializable {
                 double s1 = rs.getDouble("GradeAssessment1");
                 double s2 = rs.getDouble("GradeAssessment2");
                 double sF = rs.getDouble("GradeFinal");
-                double sAvg = rs.getDouble("GradeAverage");
                 String note = rs.getString("GradeNote");
+
+                // TÍNH ĐIỂM TỰ ĐỘNG: (30% - 20% - 50%)
+                double sAvg = (s1 * 0.3) + (s2 * 0.2) + (sF * 0.5);
+                sAvg = Math.round(sAvg * 100.0) / 100.0; // Làm tròn 2 chữ số
 
                 gradeList.add(new GradeViewModel(subjName, credit, s1, s2, sF, sAvg, note));
 
+                // Chỉ tính GPA nếu môn đó đã có điểm tổng kết > 0
                 if (sAvg > 0) {
                     totalScore += sAvg * credit;
                     totalCredits += credit;
@@ -235,6 +239,8 @@ public class StudentDashboardController implements Initializable {
             e.printStackTrace();
         }
     }
+
+
 
     private void loadSchedule() {
         if (cbSemester.getValue() == null) return;
@@ -269,11 +275,12 @@ public class StudentDashboardController implements Initializable {
     }
 
     private void calculateCPA() {
-        String sql = "SELECT s.SubjectCredit, g.GradeAverage " +
+        // Truy vấn lấy tất cả điểm thành phần của mọi kỳ
+        String sql = "SELECT s.SubjectCredit, g.GradeAssessment1, g.GradeAssessment2, g.GradeFinal " +
                 "FROM Grade g " +
                 "JOIN CourseClass c ON g.CourseClassID = c.CourseClassId " +
                 "JOIN Subject s ON c.SubjectId = s.SubjectId " +
-                "WHERE g.StudentID = ? AND g.GradeAverage > 0";
+                "WHERE g.StudentID = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -284,8 +291,17 @@ public class StudentDashboardController implements Initializable {
             int totalCredits = 0;
 
             while (rs.next()) {
-                totalScore += rs.getDouble("GradeAverage") * rs.getInt("SubjectCredit");
-                totalCredits += rs.getInt("SubjectCredit");
+                double s1 = rs.getDouble("GradeAssessment1");
+                double s2 = rs.getDouble("GradeAssessment2");
+                double sF = rs.getDouble("GradeFinal");
+
+                // TÍNH ĐIỂM TỰ ĐỘNG CHO CPA
+                double sAvg = (s1 * 0.3) + (s2 * 0.2) + (sF * 0.5);
+
+                if (sAvg > 0) { // Chỉ tính nếu đã có điểm
+                    totalScore += sAvg * rs.getInt("SubjectCredit");
+                    totalCredits += rs.getInt("SubjectCredit");
+                }
             }
 
             if (totalCredits > 0) {

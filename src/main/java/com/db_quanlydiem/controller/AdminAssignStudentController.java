@@ -22,12 +22,10 @@ public class AdminAssignStudentController implements Initializable {
 
     @FXML private Label lblClassInfo, lblCount;
 
-    // Bảng sinh viên CHƯA vào lớp (Available)
     @FXML private TextField txtSearchAvailable;
     @FXML private TableView<Student> tableAvailable;
     @FXML private TableColumn<Student, String> colAvailID, colAvailName, colAvailMajor;
 
-    // Bảng sinh viên ĐÃ vào lớp (Enrolled)
     @FXML private TextField txtSearchEnrolled;
     @FXML private TableView<Student> tableEnrolled;
     @FXML private TableColumn<Student, String> colEnrollID, colEnrollName, colEnrollMajor;
@@ -42,7 +40,6 @@ public class AdminAssignStudentController implements Initializable {
         setupTable(tableAvailable, colAvailID, colAvailName, colAvailMajor);
         setupTable(tableEnrolled, colEnrollID, colEnrollName, colEnrollMajor);
 
-        // Setup Search
         setupSearch(txtSearchAvailable, tableAvailable, availableList);
         setupSearch(txtSearchEnrolled, tableEnrolled, enrolledList);
     }
@@ -53,7 +50,6 @@ public class AdminAssignStudentController implements Initializable {
         major.setCellValueFactory(new PropertyValueFactory<>("studentMajor"));
     }
 
-    // Hàm gọi từ bên ngoài để truyền dữ liệu lớp học vào
     public void setCourseClass(CourseClass courseClass) {
         this.currentClass = courseClass;
         lblClassInfo.setText("Lớp: " + courseClass.getCourseClassId() + " - " + courseClass.getClassName());
@@ -74,13 +70,11 @@ public class AdminAssignStudentController implements Initializable {
                 "(SELECT StudentID FROM Grade WHERE CourseClassID = ?)";
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // Load Enrolled
             PreparedStatement psEnroll = conn.prepareStatement(sqlEnrolled);
             psEnroll.setString(1, currentClass.getCourseClassId());
             ResultSet rsEnroll = psEnroll.executeQuery();
             while(rsEnroll.next()) enrolledList.add(mapStudent(rsEnroll));
 
-            // Load Available
             PreparedStatement psAvail = conn.prepareStatement(sqlAvailable);
             psAvail.setString(1, currentClass.getCourseClassId());
             ResultSet rsAvail = psAvail.executeQuery();
@@ -93,13 +87,20 @@ public class AdminAssignStudentController implements Initializable {
         updateCount();
     }
 
+    // --- QUAN TRỌNG: Hàm này đã được sửa để khớp với Constructor 12 tham số ---
     private Student mapStudent(ResultSet rs) throws Exception {
         return new Student(
-                rs.getString("StudentID"), rs.getString("StudentName"),
-                rs.getDate("StudentDOB"), rs.getString("StudentGender"),
-                rs.getString("StudentMajor"), rs.getString("StudentEmail"),
-                rs.getString("StudentPhone"), rs.getString("StudentHometown"),
-                rs.getString("ParentName"), rs.getString("ParentPhone"),
+                rs.getString("StudentID"),
+                rs.getString("StudentName"),
+                rs.getDate("StudentDOB"),
+                rs.getString("StudentGender"),
+                rs.getString("StudentCohort"), // <-- Bổ sung tham số thứ 5: Khóa học
+                rs.getString("StudentMajor"),
+                rs.getString("StudentEmail"),
+                rs.getString("StudentPhone"),
+                rs.getString("StudentHometown"),
+                rs.getString("ParentName"),
+                rs.getString("ParentPhone"),
                 rs.getString("StudentStatus")
         );
     }
@@ -112,7 +113,6 @@ public class AdminAssignStudentController implements Initializable {
             return;
         }
 
-        // Thêm vào bảng Grade
         String sql = "INSERT INTO Grade (StudentID, CourseClassID, SemesterID, GradeAssessment1, GradeAssessment2, GradeFinal, GradeAverage) VALUES (?, ?, ?, 0, 0, 0, 0)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -121,7 +121,6 @@ public class AdminAssignStudentController implements Initializable {
             ps.setString(3, currentClass.getSemesterID());
             ps.executeUpdate();
 
-            // Cập nhật UI
             availableList.remove(selected);
             enrolledList.add(selected);
             updateCount();
@@ -144,7 +143,6 @@ public class AdminAssignStudentController implements Initializable {
         confirm.showAndWait();
         if (confirm.getResult() != ButtonType.YES) return;
 
-        // Xóa khỏi bảng Grade
         String sql = "DELETE FROM Grade WHERE StudentID = ? AND CourseClassID = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -152,7 +150,6 @@ public class AdminAssignStudentController implements Initializable {
             ps.setString(2, currentClass.getCourseClassId());
             ps.executeUpdate();
 
-            // Cập nhật UI
             enrolledList.remove(selected);
             availableList.add(selected);
             updateCount();

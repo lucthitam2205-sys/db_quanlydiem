@@ -173,9 +173,29 @@ public class ProfessorDashboardController implements Initializable {
         if (selectedClass == null) return;
 
         gradeList.clear();
-        gradeList.addAll(gradeDAO.getGradesByClass(selectedClass.getCourseClassId()));
-        tableGrades.setItems(gradeList);
+        List<Grade> rawGrades = gradeDAO.getGradesByClass(selectedClass.getCourseClassId());
 
+        // --- LOGIC FIX LỖI ĐIỂM TRUNG BÌNH ---
+        for (Grade g : rawGrades) {
+            // Tự động tính toán lại điểm trung bình dựa trên các điểm thành phần
+            // Công thức: (ĐG1 * 0.3) + (ĐG2 * 0.2) + (Cuối kỳ * 0.5)
+            double s1 = g.getGradeAssessment1();
+            double s2 = g.getGradeAssessment2();
+            double sf = g.getGradeFinal();
+
+            // Chỉ tính nếu các điểm thành phần hợp lệ (ví dụ >= 0)
+            double avg = (s1 * 0.3) + (s2 * 0.2) + (sf * 0.5);
+
+            // Làm tròn 2 chữ số thập phân
+            avg = Math.round(avg * 100.0) / 100.0;
+
+            // Cập nhật vào đối tượng (chỉ trong RAM để hiển thị, chưa lưu DB)
+            g.setGradeAverage(avg);
+
+            gradeList.add(g);
+        }
+
+        tableGrades.setItems(gradeList);
         updateStatistics();
     }
 
