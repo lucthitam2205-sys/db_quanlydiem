@@ -41,7 +41,7 @@ public class AdminAccountController implements Initializable {
         colCreatedDate.setCellValueFactory(new PropertyValueFactory<>("createdDate"));
 
         // 2. Cấu hình ComboBox
-        cbRole.setItems(FXCollections.observableArrayList("Admin", "Professor", "Student"));
+        cbRole.setItems(FXCollections.observableArrayList("Admin", "Giảng viên", "Sinh viên"));
 
         // 3. Load dữ liệu
         loadData();
