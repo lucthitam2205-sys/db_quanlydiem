@@ -1,12 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.effect.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="700.0" prefWidth="1100.0" style="-fx-background-color: #ecf0f1;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.AdminCourseClassController">
+<BorderPane prefHeight="700.0" prefWidth="1100.0" style="-fx-background-color: #ecf0f1;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.AdminCourseClassController">
 
     <!-- 1. HEADER GRADIENT -->
     <top>
@@ -19,7 +34,10 @@
                                 <Font name="System Bold" size="24.0" />
                             </font>
                         </Label>
-                        <Label text="Tổ chức và quản lý các lớp tín chỉ trong học kỳ" textFill="#bdc3c7" />
+                        <Label text="Tổ chức và quản lý các lớp tín chỉ trong học kỳ" textFill="#bdc3c7">
+                     <font>
+                        <Font size="13.0" />
+                     </font></Label>
                     </children>
                 </VBox>
             </children>
@@ -39,10 +57,13 @@
                 <!-- Search Bar -->
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                     <children>
-                        <TextField fx:id="txtSearch" prefWidth="300.0" promptText="🔍 Tìm theo Mã Lớp, Môn hoặc Tên..." style="-fx-background-radius: 20; -fx-padding: 8 15 8 15;" HBox.hgrow="ALWAYS" />
+                        <TextField fx:id="txtSearch" prefWidth="300.0" promptText="🔍 Tìm theo Mã Lớp, Môn hoặc Tên..." style="-fx-background-radius: 20; -fx-padding: 8 15 8 15;" HBox.hgrow="ALWAYS">
+                     <font>
+                        <Font size="13.0" />
+                     </font></TextField>
                         <Button mnemonicParsing="false" onAction="#handleSearch" style="-fx-background-color: #3498db; -fx-background-radius: 20; -fx-cursor: hand;" text="Tìm kiếm" textFill="WHITE">
                             <font>
-                                <Font name="System Bold" size="12.0" />
+                                <Font name="System Bold" size="14.0" />
                             </font>
                             <padding>
                                 <Insets bottom="8.0" left="15.0" right="15.0" top="8.0" />
@@ -52,6 +73,9 @@
                             <padding>
                                 <Insets bottom="8.0" left="12.0" right="12.0" top="8.0" />
                             </padding>
+                     <font>
+                        <Font name="System Bold" size="14.0" />
+                     </font>
                         </Button>
                     </children>
                 </HBox>
@@ -96,7 +120,7 @@
                             <children>
                                 <Label text="THÔNG TIN LỚP HỌC" textFill="#2c3e50">
                                     <font>
-                                        <Font name="System Bold" size="18.0" />
+                                        <Font name="System Bold" size="20.0" />
                                     </font>
                                 </Label>
 
@@ -122,25 +146,49 @@
                                         <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                                     </rowConstraints>
                                     <children>
-                                        <Label text="Mã Lớp HP (*):" textFill="#555555" />
+                                        <Label text="Mã Lớp HP (*):" textFill="#555555">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font></Label>
                                         <TextField fx:id="txtClassID" promptText="VD: IT101.L01" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7; -fx-border-radius: 3; -fx-padding: 8;" GridPane.columnIndex="1" />
 
-                                        <Label text="Môn học (*):" textFill="#555555" GridPane.rowIndex="1" />
-                                        <ComboBox fx:id="cbSubject" maxWidth="1.7976931348623157E308" onAction="#handleSubjectSelection" promptText="-- Chọn Môn --" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7;" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                        <Label text="Môn học (*):" textFill="#555555" GridPane.rowIndex="1">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font></Label>
+                                        <ComboBox fx:id="cbSubject" maxWidth="1.7976931348623157E308" onAction="#handleSubjectSelection" prefHeight="34.0" prefWidth="260.0" promptText="-- Chọn Môn --" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7;" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
-                                        <Label text="Tên lớp nhỏ:" textFill="#555555" GridPane.rowIndex="2" />
+                                        <Label text="Tên lớp nhỏ:" textFill="#555555" GridPane.rowIndex="2">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font></Label>
                                         <TextField fx:id="txtClassName" promptText="VD: L01" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7; -fx-border-radius: 3; -fx-padding: 8;" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
-                                        <Label text="Số tín chỉ:" textFill="#555555" GridPane.rowIndex="3" />
-                                        <TextField fx:id="txtCredits" editable="false" promptText="Tự động" style="-fx-background-color: #eec; -fx-border-color: #bdc3c7; -fx-border-radius: 3; -fx-padding: 8;" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                        <Label text="Số tín chỉ:" textFill="#555555" GridPane.rowIndex="3">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font></Label>
+                                        <TextField fx:id="txtCredits" editable="false" promptText="Tự động" style="-fx-background-color: #eec; -fx-border-color: #bdc3c7; -fx-border-radius: 3; -fx-padding: 8;" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font></TextField>
 
-                                        <Label text="Học kỳ (*):" textFill="#555555" GridPane.rowIndex="4" />
-                                        <ComboBox fx:id="cbSemester" maxWidth="1.7976931348623157E308" promptText="-- Chọn Kỳ --" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7;" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                        <Label text="Học kỳ (*):" textFill="#555555" GridPane.rowIndex="4">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font></Label>
+                                        <ComboBox fx:id="cbSemester" maxWidth="1.7976931348623157E308" prefHeight="34.0" prefWidth="260.0" promptText="-- Chọn Kỳ --" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7;" GridPane.columnIndex="1" GridPane.rowIndex="4" />
 
-                                        <Label text="Giảng viên:" textFill="#555555" GridPane.rowIndex="5" />
-                                        <ComboBox fx:id="cbProfessor" maxWidth="1.7976931348623157E308" promptText="-- Chọn GV --" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7;" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                        <Label text="Giảng viên:" textFill="#555555" GridPane.rowIndex="5">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font></Label>
+                                        <ComboBox fx:id="cbProfessor" maxWidth="1.7976931348623157E308" prefHeight="31.0" prefWidth="260.0" promptText="-- Chọn GV --" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7;" GridPane.columnIndex="1" GridPane.rowIndex="5" />
 
-                                        <Label text="Sĩ số tối đa:" textFill="#555555" GridPane.rowIndex="6" />
+                                        <Label text="Sĩ số tối đa:" textFill="#555555" GridPane.rowIndex="6">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font></Label>
                                         <Spinner fx:id="spCapacity" editable="true" maxWidth="120.0" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7;" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                                     </children>
                                 </GridPane>
@@ -182,7 +230,7 @@
             <children>
                 <Button mnemonicParsing="false" onAction="#handleBack" prefHeight="47.0" prefWidth="116.0" style="-fx-background-color: #7f8c8d; -fx-text-fill: white; -fx-background-radius: 20; -fx-cursor: hand;" text="⬅ Quay lại">
                     <font>
-                        <Font name="System Bold" size="12.0" />
+                        <Font name="System Bold" size="14.0" />
                     </font>
                     <padding>
                         <Insets bottom="8.0" left="15.0" right="15.0" top="8.0" />

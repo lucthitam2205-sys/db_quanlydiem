@@ -139,7 +139,7 @@
     <bottom>
         <HBox alignment="CENTER_RIGHT" prefHeight="56.0" prefWidth="1175.0" style="-fx-background-color: white; -fx-padding: 20; -fx-border-color: #bdc3c7; -fx-border-width: 1 0 0 0;" BorderPane.alignment="CENTER">
             <children>
-                <Button mnemonicParsing="false" onAction="#handleLogout" prefHeight="58.0" prefWidth="150.0" style="-fx-background-color: #c0392b; -fx-background-radius: 5;" text="Đăng xuất" textFill="WHITE">
+                <Button mnemonicParsing="false" onAction="#handleLogout" prefHeight="45.0" prefWidth="150.0" style="-fx-background-color: #c0392b; -fx-background-radius: 5;" text="Đăng xuất" textFill="WHITE">
                     <font>
                         <Font name="System Bold" size="14.0" />
                     </font>

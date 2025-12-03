@@ -11,59 +11,76 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" prefHeight="600.0" prefWidth="900.0" spacing="15.0" style="-fx-background-color: #f0f2f5;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.LoginController">
+<VBox alignment="CENTER" prefHeight="600.0" prefWidth="900.0" spacing="15.0" style="-fx-background-color: #f0f2f5;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.LoginController">
     <padding>
         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
     </padding>
     <children>
-        <Label text="HỆ THỐNG QUẢN LÝ ĐIỂM" textFill="#2c3e50">
+        <Label prefHeight="53.0" prefWidth="330.0" text="HỆ THỐNG QUẢN LÝ ĐIỂM" textFill="#2c3e50">
             <font>
                 <Font name="System Bold" size="24.0" />
             </font>
         </Label>
-        <VBox maxWidth="350.0" spacing="15.0" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);">
+        <VBox maxWidth="454.0" prefHeight="407.0" prefWidth="454.0" spacing="15.0" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);">
             <children>
                 <VBox spacing="5.0">
                     <children>
                         <Label text="Tên đăng nhập:" textFill="#34495e">
                             <font>
-                                <Font name="System Bold" size="12.0" />
+                                <Font name="System Bold" size="14.0" />
                             </font>
                         </Label>
-                        <TextField fx:id="txtUsername" promptText="Nhập mã SV hoặc mã GV" style="-fx-padding: 10;" />
+                        <TextField fx:id="txtUsername" prefHeight="44.0" prefWidth="394.0" promptText="Nhập mã SV hoặc mã GV" style="-fx-padding: 10;">
+                     <font>
+                        <Font size="14.0" />
+                     </font></TextField>
                     </children>
                 </VBox>
-                <VBox spacing="5.0">
+                <VBox prefHeight="79.0" prefWidth="394.0" spacing="5.0">
                     <children>
                         <Label text="Mật khẩu:" textFill="#34495e">
                             <font>
-                                <Font name="System Bold" size="12.0" />
+                                <Font name="System Bold" size="14.0" />
                             </font>
                         </Label>
-                        <PasswordField fx:id="txtPassword" promptText="Nhập mật khẩu" style="-fx-padding: 10;" />
+                        <PasswordField fx:id="txtPassword" prefHeight="44.0" prefWidth="394.0" promptText="Nhập mật khẩu" style="-fx-padding: 10;">
+                     <font>
+                        <Font size="14.0" />
+                     </font></PasswordField>
                     </children>
                 </VBox>
 
-                <Label text="Vai trò:" textFill="#34495e">
+                <Label prefHeight="28.0" prefWidth="49.0" text="Vai trò:" textFill="#34495e">
                     <font>
-                        <Font name="System Bold" size="12.0" />
+                        <Font name="System Bold" size="14.0" />
                     </font>
                 </Label>
-                <HBox alignment="CENTER_LEFT" spacing="15.0">
+                <HBox alignment="CENTER_LEFT" prefHeight="40.0" prefWidth="322.0" spacing="15.0">
                     <children>
                         <RadioButton fx:id="rdStudent" mnemonicParsing="false" selected="true" text="Sinh viên">
                             <toggleGroup>
                                 <ToggleGroup fx:id="roleGroup" />
                             </toggleGroup>
+                     <font>
+                        <Font size="14.0" />
+                     </font>
                         </RadioButton>
-                        <RadioButton fx:id="rdProfessor" mnemonicParsing="false" text="Giảng viên" toggleGroup="$roleGroup" />
-                        <RadioButton fx:id="rdAdmin" mnemonicParsing="false" text="Admin" toggleGroup="$roleGroup" />
+                  <Label prefHeight="17.0" prefWidth="27.0" />
+                        <RadioButton fx:id="rdProfessor" mnemonicParsing="false" text="Giảng viên" toggleGroup="$roleGroup">
+                     <font>
+                        <Font size="14.0" />
+                     </font></RadioButton>
+                  <Label prefHeight="17.0" prefWidth="33.0" />
+                        <RadioButton fx:id="rdAdmin" mnemonicParsing="false" text="Admin" toggleGroup="$roleGroup">
+                     <font>
+                        <Font size="14.0" />
+                     </font></RadioButton>
                     </children>
                 </HBox>
 
-                <Button fx:id="btnLogin" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleLogin" style="-fx-background-color: #3498db; -fx-cursor: hand;" text="Đăng nhập" textFill="WHITE">
+                <Button fx:id="btnLogin" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleLogin" prefHeight="53.0" prefWidth="394.0" style="-fx-background-color: #3498db; -fx-cursor: hand;" text="Đăng nhập" textFill="WHITE">
                     <font>
-                        <Font name="System Bold" size="14.0" />
+                        <Font name="System Bold" size="16.0" />
                     </font>
                     <VBox.margin>
                         <Insets top="10.0" />

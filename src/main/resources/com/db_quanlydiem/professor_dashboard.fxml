@@ -8,7 +8,6 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
@@ -17,7 +16,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="700.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.ProfessorDashboardController">
+<BorderPane prefHeight="700.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.ProfessorDashboardController">
 
     <!-- 1. SIDEBAR: THÔNG TIN GIẢNG VIÊN -->
     <left>
@@ -54,30 +53,51 @@
                     <children>
                         <HBox spacing="10.0">
                             <children>
-                                <Label minWidth="80.0" text="Chức danh:" textFill="#bdc3c7" />
+                                <Label minWidth="80.0" text="Chức danh:" textFill="#bdc3c7">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
                                 <Label fx:id="lblTitle" text="Tiến sĩ" textFill="WHITE">
                                     <font>
-                                        <Font name="System Bold" size="12.0" />
+                                        <Font size="13.0" />
                                     </font>
                                 </Label>
                             </children>
                         </HBox>
                         <HBox spacing="10.0">
                             <children>
-                                <Label minWidth="80.0" text="SĐT:" textFill="#bdc3c7" />
-                                <Label fx:id="lblPhone" text="0901234567" textFill="WHITE" />
+                                <Label minWidth="80.0" text="SĐT:" textFill="#bdc3c7">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
+                                <Label fx:id="lblPhone" text="0901234567" textFill="WHITE">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
                             </children>
                         </HBox>
                         <HBox spacing="10.0">
                             <children>
-                                <Label minWidth="80.0" text="Email:" textFill="#bdc3c7" />
-                                <Label fx:id="lblEmail" text="an.nv@huce.edu.vn" textFill="WHITE" wrapText="true" />
+                                <Label minWidth="80.0" text="Email:" textFill="#bdc3c7">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
+                                <Label fx:id="lblEmail" text="an.nv@huce.edu.vn" textFill="WHITE" wrapText="true">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
                             </children>
                         </HBox>
                         <HBox spacing="10.0">
                             <children>
-                                <Label minWidth="80.0" text="Quê quán:" textFill="#bdc3c7" />
-                                <Label fx:id="lblHometown" text="Hà Nội" textFill="WHITE" wrapText="true" /> <!-- Thêm Quê quán -->
+                                <Label minWidth="80.0" text="Quê quán:" textFill="#bdc3c7">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
+                                <Label fx:id="lblHometown" text="Hà Nội" textFill="WHITE" wrapText="true">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label> <!-- Thêm Quê quán -->
                             </children>
                         </HBox>
                     </children>
@@ -88,7 +108,7 @@
                 <!-- NÚT MỚI: XEM LỊCH DẠY -->
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleViewSchedule" style="-fx-background-color: #34495e; -fx-text-fill: white; -fx-border-color: #95a5a6; -fx-border-radius: 5; -fx-background-radius: 5; -fx-cursor: hand;" text="📅 Xem Lịch Dạy">
                     <font>
-                        <Font name="System Bold" size="12.0" />
+                        <Font name="System Bold" size="14.0" />
                     </font>
                     <padding>
                         <Insets bottom="10.0" top="10.0" />
@@ -99,6 +119,9 @@
                     <padding>
                         <Insets bottom="10.0" top="10.0" />
                     </padding>
+               <font>
+                  <Font size="14.0" />
+               </font>
                 </Button>
             </children>
         </VBox>
@@ -132,8 +155,14 @@
 
                         <Region HBox.hgrow="ALWAYS" />
 
-                        <TextField fx:id="txtSearchStudent" prefWidth="200.0" promptText="Tìm kiếm sinh viên..." />
-                        <Button mnemonicParsing="false" style="-fx-background-color: #3498db;" text="Tìm" textFill="WHITE" />
+                        <TextField fx:id="txtSearchStudent" prefWidth="200.0" promptText="Tìm kiếm sinh viên...">
+                     <font>
+                        <Font size="13.0" />
+                     </font></TextField>
+                        <Button mnemonicParsing="false" style="-fx-background-color: #3498db;" text="Tìm" textFill="WHITE">
+                     <font>
+                        <Font size="14.0" />
+                     </font></Button>
                     </children>
                 </HBox>
 
@@ -159,20 +188,50 @@
                         <!-- Statistics Bar -->
                         <HBox spacing="0.0" style="-fx-border-color: #95a5a6; -fx-background-color: white;">
                             <children>
-                                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10;" text="Tổng số SV:" HBox.hgrow="ALWAYS" />
-                                <Label fx:id="lblTotalStudents" alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10; -fx-font-weight: bold;" text="0" HBox.hgrow="ALWAYS" />
+                                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10;" text="Tổng số SV:" HBox.hgrow="ALWAYS">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
+                                <Label fx:id="lblTotalStudents" alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10; -fx-font-weight: bold;" text="0" HBox.hgrow="ALWAYS">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
 
-                                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10;" text="Tỷ lệ Xuất sắc:" HBox.hgrow="ALWAYS" />
-                                <Label fx:id="lblRateExcellent" alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10; -fx-font-weight: bold; -fx-text-fill: #27ae60;" text="0%" HBox.hgrow="ALWAYS" />
+                                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10;" text="Tỷ lệ Xuất sắc:" HBox.hgrow="ALWAYS">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
+                                <Label fx:id="lblRateExcellent" alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10; -fx-font-weight: bold; -fx-text-fill: #27ae60;" text="0%" HBox.hgrow="ALWAYS">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
 
-                                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10;" text="Tỷ lệ Giỏi:" HBox.hgrow="ALWAYS" />
-                                <Label fx:id="lblRateGood" alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10; -fx-font-weight: bold; -fx-text-fill: #2980b9;" text="0%" HBox.hgrow="ALWAYS" />
+                                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10;" text="Tỷ lệ Giỏi:" HBox.hgrow="ALWAYS">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
+                                <Label fx:id="lblRateGood" alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10; -fx-font-weight: bold; -fx-text-fill: #2980b9;" text="0%" HBox.hgrow="ALWAYS">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
 
-                                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10;" text="Tỷ lệ Khá:" HBox.hgrow="ALWAYS" />
-                                <Label fx:id="lblRateFair" alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10; -fx-font-weight: bold; -fx-text-fill: #e67e22;" text="0%" HBox.hgrow="ALWAYS" />
+                                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10;" text="Tỷ lệ Khá:" HBox.hgrow="ALWAYS">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
+                                <Label fx:id="lblRateFair" alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10; -fx-font-weight: bold; -fx-text-fill: #e67e22;" text="0%" HBox.hgrow="ALWAYS">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
 
-                                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10;" text="Tỷ lệ TB:" HBox.hgrow="ALWAYS" />
-                                <Label fx:id="lblRateAverage" alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-padding: 10; -fx-font-weight: bold; -fx-text-fill: #c0392b;" text="0%" HBox.hgrow="ALWAYS" />
+                                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-border-color: transparent #95a5a6 transparent transparent; -fx-padding: 10;" text="Tỷ lệ TB:" HBox.hgrow="ALWAYS">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
+                                <Label fx:id="lblRateAverage" alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-padding: 10; -fx-font-weight: bold; -fx-text-fill: #c0392b;" text="0%" HBox.hgrow="ALWAYS">
+                           <font>
+                              <Font size="13.0" />
+                           </font></Label>
                             </children>
                         </HBox>
                     </children>
@@ -196,6 +255,7 @@
                                 <Font name="System Bold" size="14.0" />
                             </font>
                         </Button>
+                  <Region prefHeight="0.0" prefWidth="200.0" />
                         <Button mnemonicParsing="false" onAction="#handleSaveGrades" style="-fx-background-color: #27ae60; -fx-background-radius: 5; -fx-cursor: hand;" text="Lưu thay đổi" textFill="WHITE">
                             <font>
                                 <Font name="System Bold" size="14.0" />

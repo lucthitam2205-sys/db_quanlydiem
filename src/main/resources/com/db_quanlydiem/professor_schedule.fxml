@@ -8,11 +8,10 @@
 <?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="700.0" prefWidth="1100.0" style="-fx-background-color: #f5f6fa;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.ProfessorScheduleController">
+<BorderPane prefHeight="700.0" prefWidth="1100.0" style="-fx-background-color: #f5f6fa;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.ProfessorScheduleController">
 
     <!-- HEADER -->
     <top>
@@ -25,7 +24,10 @@
                                 <Font name="System Bold" size="20.0" />
                             </font>
                         </Label>
-                        <Label text="Thời khóa biểu các lớp học phần đang phụ trách" textFill="#bdc3c7" />
+                        <Label text="Thời khóa biểu các lớp học phần đang phụ trách" textFill="#bdc3c7">
+                     <font>
+                        <Font size="13.0" />
+                     </font></Label>
                     </children>
                 </VBox>
             </children>
@@ -62,9 +64,9 @@
     <bottom>
         <HBox alignment="CENTER_RIGHT" style="-fx-padding: 15; -fx-background-color: white; -fx-border-color: #bdc3c7; -fx-border-width: 1 0 0 0;" BorderPane.alignment="CENTER">
             <children>
-                <Button mnemonicParsing="false" onAction="#handleClose" prefWidth="100.0" style="-fx-background-color: #7f8c8d; -fx-cursor: hand;" text="Đóng" textFill="WHITE">
+                <Button mnemonicParsing="false" onAction="#handleClose" prefWidth="100.0" style="-fx-background-color: #7f8c8d; -fx-cursor: hand;" text="Quay lại" textFill="WHITE">
                     <font>
-                        <Font name="System Bold" size="13.0" />
+                        <Font name="System Bold" size="14.0" />
                     </font>
                 </Button>
             </children>

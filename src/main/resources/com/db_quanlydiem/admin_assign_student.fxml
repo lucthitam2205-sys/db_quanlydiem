@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="700.0" prefWidth="1100.0" style="-fx-background-color: #ecf0f1;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.AdminAssignStudentController">
+<BorderPane prefHeight="700.0" prefWidth="1100.0" style="-fx-background-color: #ecf0f1;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.AdminAssignStudentController">
 
     <!-- HEADER -->
     <top>
@@ -35,8 +35,11 @@
                 <!-- BẢNG TRÁI: SINH VIÊN CHƯA VÀO LỚP -->
                 <VBox spacing="10.0" HBox.hgrow="ALWAYS">
                     <children>
-                        <Label text="Sinh viên chưa đăng ký" textFill="#7f8c8d"><font><Font name="System Bold" size="12.0" /></font></Label>
-                        <TextField fx:id="txtSearchAvailable" promptText="Tìm theo tên hoặc mã..." />
+                        <Label text="Sinh viên chưa đăng ký" textFill="#7f8c8d"><font><Font name="System Bold" size="13.0" /></font></Label>
+                        <TextField fx:id="txtSearchAvailable" promptText="Tìm theo tên hoặc mã...">
+                     <font>
+                        <Font size="13.0" />
+                     </font></TextField>
                         <TableView fx:id="tableAvailable" VBox.vgrow="ALWAYS">
                             <columns>
                                 <TableColumn fx:id="colAvailID" prefWidth="80.0" text="Mã SV" />
@@ -49,7 +52,7 @@
                 </VBox>
 
                 <!-- CÁC NÚT ĐIỀU KHIỂN GIỮA -->
-                <VBox alignment="CENTER" spacing="15.0" minWidth="60.0">
+                <VBox alignment="CENTER" minWidth="60.0" spacing="15.0">
                     <children>
                         <Button mnemonicParsing="false" onAction="#handleAddStudent" style="-fx-background-color: #27ae60; -fx-cursor: hand;" text="&gt;&gt;" textFill="WHITE">
                             <font><Font name="System Bold" size="14.0" /></font>
@@ -65,11 +68,14 @@
                     <children>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <children>
-                                <Label text="Danh sách lớp hiện tại" textFill="#27ae60"><font><Font name="System Bold" size="12.0" /></font></Label>
+                                <Label text="Danh sách lớp hiện tại" textFill="#27ae60"><font><Font name="System Bold" size="13.0" /></font></Label>
                                 <Label fx:id="lblCount" text="(0/60)" textFill="#7f8c8d" />
                             </children>
                         </HBox>
-                        <TextField fx:id="txtSearchEnrolled" promptText="Tìm trong lớp..." />
+                        <TextField fx:id="txtSearchEnrolled" promptText="Tìm trong lớp...">
+                     <font>
+                        <Font size="13.0" />
+                     </font></TextField>
                         <TableView fx:id="tableEnrolled" VBox.vgrow="ALWAYS">
                             <columns>
                                 <TableColumn fx:id="colEnrollID" prefWidth="80.0" text="Mã SV" />
@@ -88,7 +94,10 @@
     <bottom>
         <HBox alignment="CENTER_RIGHT" style="-fx-padding: 10; -fx-background-color: white; -fx-border-color: #bdc3c7; -fx-border-width: 1 0 0 0;" BorderPane.alignment="CENTER">
             <children>
-                <Button mnemonicParsing="false" onAction="#handleClose" prefWidth="100.0" style="-fx-background-color: #7f8c8d;" text="Đóng" textFill="WHITE" />
+                <Button mnemonicParsing="false" onAction="#handleClose" prefWidth="100.0" style="-fx-background-color: #7f8c8d;" text="Quay lại" textFill="WHITE">
+               <font>
+                  <Font size="15.0" />
+               </font></Button>
             </children>
         </HBox>
     </bottom>
