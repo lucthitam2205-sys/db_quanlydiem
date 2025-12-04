@@ -1,7 +1,7 @@
 package com.db_quanlydiem.controller;
 
 import com.db_quanlydiem.Main;
-import com.db_quanlydiem.dao.AttendanceDAO; // Cần thiết
+import com.db_quanlydiem.dao.AttendanceDAO;
 import com.db_quanlydiem.dao.CourseClassDAO;
 import com.db_quanlydiem.dao.GradeDAO;
 import com.db_quanlydiem.dao.ProfessorDAO;
@@ -15,6 +15,8 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList; // BỔ SUNG
+import javafx.collections.transformation.SortedList;   // BỔ SUNG
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -39,20 +41,18 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
-// Implement interface AttendanceUpdateListener để nhận callback từ AttendanceController
 public class ProfessorDashboardController implements Initializable, AttendanceController.AttendanceUpdateListener {
 
     // --- 1. KHAI BÁO FXML ---
     @FXML private Label lblProfName, lblProfID, lblTitle, lblPhone, lblEmail, lblHometown;
     @FXML private ComboBox<CourseClass> cbClass;
-    @FXML private TextField txtSearchStudent;
+    @FXML private TextField txtSearchStudent; // Textfield tìm kiếm
 
-    // TableView và Columns (SỬ DỤNG GradeViewModel để hỗ trợ cột Vắng)
+    // TableView và Columns (SỬ DỤNG GradeViewModel)
     @FXML private TableView<GradeViewModel> tableGrades;
-    // Chuyển đổi các cột Grade cũ sang GradeViewModel
     @FXML private TableColumn<GradeViewModel, String> colSTT, colStudentID, colStudentName, colNote;
     @FXML private TableColumn<GradeViewModel, Double> colScore1, colScore2, colScoreFinal, colScoreAvg;
-    @FXML private TableColumn<GradeViewModel, Integer> colAbsentCount; // CỘT VẮNG MỚI
+    @FXML private TableColumn<GradeViewModel, Integer> colAbsentCount;
 
     // Thống kê
     @FXML private Label lblTotalStudents, lblRateExcellent, lblRateGood, lblRateFair, lblRateAverage;
@@ -62,28 +62,49 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
     private GradeDAO gradeDAO = new GradeDAO();
     private StudentDAO studentDAO = new StudentDAO();
     private ProfessorDAO professorDAO = new ProfessorDAO();
-    private AttendanceDAO attendanceDAO = new AttendanceDAO(); // DAO MỚI
+    private AttendanceDAO attendanceDAO = new AttendanceDAO();
 
-    private ObservableList<GradeViewModel> gradeList = FXCollections.observableArrayList();
+    // SỬA ĐỔI: masterGradeList là danh sách gốc, filteredGradeList là danh sách được hiển thị
+    private ObservableList<GradeViewModel> masterGradeList = FXCollections.observableArrayList();
+    private FilteredList<GradeViewModel> filteredGradeList; // Danh sách đã lọc
     private List<Student> allStudents;
 
-    public static String CURRENT_PROFESSOR_ID = "GV001";
+    private String currentProfessorID;
+
+    public void setProfessorID(String professorID) {
+        this.currentProfessorID = professorID;
+        loadProfessorInfo();
+        loadClasses();
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         allStudents = studentDAO.getAllStudents();
+
+        // Khởi tạo FilteredList/SortedList ngay
+        filteredGradeList = new FilteredList<>(masterGradeList, p -> true);
+        SortedList<GradeViewModel> sortedData = new SortedList<>(filteredGradeList);
+        sortedData.comparatorProperty().bind(tableGrades.comparatorProperty());
+        tableGrades.setItems(sortedData);
+
         loadProfessorInfo();
         loadClasses();
         setupTable();
         cbClass.setOnAction(e -> loadGrades());
+
+        // BƯỚC MỚI: Thêm listener cho ô tìm kiếm
+        txtSearchStudent.textProperty().addListener((observable, oldValue, newValue) -> {
+            filterStudentList(newValue);
+        });
     }
 
-    // --- LOGIC CHÍNH ---
+    // --- LOGIC CƠ BẢN ---
 
-    private void loadProfessorInfo() { /* GIỮ NGUYÊN */
+    private void loadProfessorInfo() {
+        if (this.currentProfessorID == null) return;
         List<Professor> professors = professorDAO.getAllProfessors();
         Professor currentProf = professors.stream()
-                .filter(p -> p.getProfessorID().equals(CURRENT_PROFESSOR_ID))
+                .filter(p -> p.getProfessorID().equals(this.currentProfessorID))
                 .findFirst()
                 .orElse(null);
 
@@ -100,35 +121,32 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
         }
     }
 
-    private void loadClasses() { /* GIỮ NGUYÊN */
+    private void loadClasses() {
+        if (this.currentProfessorID == null) return;
         List<CourseClass> allClasses = courseClassDAO.getAllCourseClasses();
         List<CourseClass> myClasses = allClasses.stream()
-                .filter(c -> CURRENT_PROFESSOR_ID.equals(c.getProfessorID()))
+                .filter(c -> this.currentProfessorID.equals(c.getProfessorID()))
                 .collect(Collectors.toList());
 
         cbClass.setItems(FXCollections.observableArrayList(myClasses));
     }
 
-    private void setupTable() {
+    private void setupTable() { /* Giữ nguyên */
         tableGrades.setEditable(true);
 
-        // Cấu hình các cột cơ bản
         colStudentID.setCellValueFactory(new PropertyValueFactory<>("studentID"));
         colStudentName.setCellValueFactory(cellData -> {
             String sID = cellData.getValue().getStudentID();
-            List<Student> students = studentDAO.getAllStudents();
-            String name = students.stream()
+            String name = allStudents.stream()
                     .filter(s -> s.getStudentID().equals(sID))
                     .map(Student::getStudentName)
                     .findFirst().orElse("Unknown");
             return new SimpleStringProperty(name);
         });
 
-        // CỘT VẮNG: Cập nhật PropertyValueFactory
         colAbsentCount.setCellValueFactory(new PropertyValueFactory<>("absentCount"));
         colAbsentCount.setStyle("-fx-alignment: CENTER; -fx-font-weight: bold; -fx-text-fill: #e74c3c;");
 
-        // Cấu hình các cột điểm cho phép sửa (Edit) - CẦN CHUYỂN SANG GradeViewModel
         setupEditableColumn(colScore1, "gradeAssessment1");
         setupEditableColumn(colScore2, "gradeAssessment2");
         setupEditableColumn(colScoreFinal, "gradeFinal");
@@ -138,7 +156,6 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
         colNote.setCellFactory(TextFieldTableCell.forTableColumn());
         colNote.setOnEditCommit(e -> e.getRowValue().setGradeNote(e.getNewValue()));
 
-        // Cột STT tự động
         colSTT.setCellFactory(column -> new TableCell<GradeViewModel, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -149,7 +166,7 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
         });
     }
 
-    private void setupEditableColumn(TableColumn<GradeViewModel, Double> col, String property) { // Chuyển kiểu sang GradeViewModel
+    private void setupEditableColumn(TableColumn<GradeViewModel, Double> col, String property) {
         col.setCellValueFactory(new PropertyValueFactory<>(property));
         col.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
         col.setOnEditCommit(event -> {
@@ -175,39 +192,74 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
         });
     }
 
-    // LOGIC CẬP NHẬT CỘT VẮNG VÀ TÍNH ĐIỂM
     private void loadGrades() {
         CourseClass selectedClass = cbClass.getValue();
-        if (selectedClass == null) return;
+        if (selectedClass == null || this.currentProfessorID == null) return;
 
-        gradeList.clear();
+        masterGradeList.clear(); // Xóa danh sách MASTER
         List<Grade> rawGrades = gradeDAO.getGradesByClass(selectedClass.getCourseClassId());
 
-        // BƯỚC CẬP NHẬT: Lấy số buổi vắng từ AttendanceDAO
+        // Lấy số buổi vắng
         Map<String, Integer> absentCounts = attendanceDAO.getAbsentCountsByClass(selectedClass.getCourseClassId());
 
         // Chuyển đổi Grade thành GradeViewModel và gán số buổi vắng
         for (Grade g : rawGrades) {
-            // Logic tính điểm gốc (Giữ nguyên)
             double s1 = g.getGradeAssessment1();
             double s2 = g.getGradeAssessment2();
             double sf = g.getGradeFinal();
             double avg = (s1 * 0.3) + (s2 * 0.2) + (sf * 0.5);
             g.setGradeAverage(Math.round(avg * 100.0) / 100.0);
 
-            // Lấy số buổi vắng
             int absentCount = absentCounts.getOrDefault(g.getStudentID(), 0);
 
-            // Thêm vào ObservableList dưới dạng ViewModel
-            gradeList.add(new GradeViewModel(g, absentCount));
+            masterGradeList.add(new GradeViewModel(g, absentCount));
         }
 
-        tableGrades.setItems(gradeList);
+        // Gắn danh sách gốc vào FilteredList
+        filteredGradeList.setPredicate(p -> true);
+
+        // Áp dụng lại bộ lọc nếu đang có từ khóa
+        filterStudentList(txtSearchStudent.getText());
+    }
+
+    /**
+     * Lọc danh sách sinh viên theo từ khóa tìm kiếm (Mã SV hoặc Tên SV).
+     * @param keyword Từ khóa tìm kiếm.
+     */
+    private void filterStudentList(String keyword) {
+        String lowerCaseFilter = keyword.toLowerCase();
+
+        filteredGradeList.setPredicate(gradeViewModel -> {
+            if (keyword == null || keyword.isEmpty()) {
+                return true; // Hiển thị tất cả nếu không có từ khóa
+            }
+
+            // 1. Lấy tên SV từ ViewModel
+            String studentID = gradeViewModel.getStudentID();
+            String studentName = allStudents.stream()
+                    .filter(s -> s.getStudentID().equals(studentID))
+                    .map(Student::getStudentName)
+                    .findFirst().orElse("");
+
+            // 2. Kiểm tra khớp mã SV hoặc Tên SV
+            if (studentID.toLowerCase().contains(lowerCaseFilter)) {
+                return true;
+            } else if (studentName.toLowerCase().contains(lowerCaseFilter)) {
+                return true;
+            }
+            return false;
+        });
+
+        // Cập nhật lại thống kê sau khi lọc
         updateStatistics();
     }
 
-    private void updateStatistics() { /* GIỮ NGUYÊN LOGIC GỐC */
-        if (gradeList.isEmpty()) {
+
+    private void updateStatistics() {
+        // Sử dụng items của TableView (đã lọc)
+        ObservableList<GradeViewModel> currentList = tableGrades.getItems();
+
+        if (currentList == null || currentList.isEmpty()) {
             lblTotalStudents.setText("0");
             lblRateExcellent.setText("0%");
             lblRateGood.setText("0%");
@@ -216,11 +268,11 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
             return;
         }
 
-        int total = gradeList.size();
-        long excellent = gradeList.stream().filter(g -> g.getGradeAverage() >= 8.5).count();
-        long good = gradeList.stream().filter(g -> g.getGradeAverage() >= 7.0 && g.getGradeAverage() < 8.5).count();
-        long fair = gradeList.stream().filter(g -> g.getGradeAverage() >= 5.5 && g.getGradeAverage() < 7.0).count();
-        long average = gradeList.stream().filter(g -> g.getGradeAverage() >= 4.0 && g.getGradeAverage() < 5.5).count();
+        int total = currentList.size();
+        long excellent = currentList.stream().filter(g -> g.getGradeAverage() >= 8.5).count();
+        long good = currentList.stream().filter(g -> g.getGradeAverage() >= 7.0 && g.getGradeAverage() < 8.5).count();
+        long fair = currentList.stream().filter(g -> g.getGradeAverage() >= 5.5 && g.getGradeAverage() < 7.0).count();
+        long average = currentList.stream().filter(g -> g.getGradeAverage() >= 4.0 && g.getGradeAverage() < 5.5).count();
 
         lblTotalStudents.setText(String.valueOf(total));
         lblRateExcellent.setText(String.format("%.1f%%", (double)excellent/total * 100));
@@ -234,22 +286,22 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
     public void refreshClassData(String courseClassID) {
         CourseClass selectedClass = cbClass.getValue();
         if (selectedClass != null && selectedClass.getCourseClassId().equals(courseClassID)) {
-            loadGrades(); // Tải lại dữ liệu (bao gồm cả cột Vắng)
+            loadGrades();
         }
     }
 
 
     // --- CÁC HÀM SỰ KIỆN (BUTTON ACTIONS) ---
 
-    // 1. MỞ CỬA SỔ XEM LỊCH DẠY (Giữ nguyên logic gốc)
     @FXML
     public void handleViewSchedule(ActionEvent event) {
+        if (this.currentProfessorID == null) return;
         try {
             FXMLLoader loader = new FXMLLoader(Main.class.getResource("professor_schedule.fxml"));
             Parent root = loader.load();
 
             ProfessorScheduleController controller = loader.getController();
-            controller.setProfessorID(CURRENT_PROFESSOR_ID);
+            controller.setProfessorID(this.currentProfessorID);
 
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
@@ -263,7 +315,6 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
         }
     }
 
-    // 2. MỞ CỬA SỔ ĐIỂM DANH (ĐÃ SỬA ĐỔI)
     @FXML
     public void handleAttendance(ActionEvent event) {
         CourseClass selectedClass = cbClass.getValue();
@@ -278,7 +329,7 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
 
             AttendanceController controller = loader.getController();
             controller.setClassInfo(selectedClass.getCourseClassId(), selectedClass.getClassName());
-            controller.setUpdateListener(this); // TRUYỀN CALLBACK VỀ DASHBOARD
+            controller.setUpdateListener(this);
 
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
@@ -293,11 +344,10 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
         }
     }
 
-    // 3. XUẤT FILE WORD (Giữ nguyên logic gốc)
     @FXML
     public void handleExportList(ActionEvent event) {
         CourseClass selectedClass = cbClass.getValue();
-        if (selectedClass == null || gradeList.isEmpty()) {
+        if (selectedClass == null || masterGradeList.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Không có dữ liệu", "Vui lòng chọn lớp và đảm bảo có dữ liệu để xuất.");
             return;
         }
@@ -325,13 +375,16 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
             writer.println("<p><b>Giảng viên:</b> " + lblProfName.getText() + "</p>");
 
             writer.println("<table>");
-            // Cập nhật header cho file word
             writer.println("<tr><th>STT</th><th>Mã SV</th><th>Họ và Tên</th><th>ĐG 1</th><th>ĐG 2</th><th>Cuối kỳ</th><th>Tổng kết</th><th>Vắng</th><th>Ghi chú</th></tr>");
 
             int stt = 1;
-            // Lặp qua ViewModel để lấy dữ liệu vắng
-            for (GradeViewModel gv : gradeList) {
-                String name = colStudentName.getCellData(gv);
+            // Lặp qua danh sách GỐC để đảm bảo xuất đầy đủ (masterGradeList)
+            for (GradeViewModel gv : masterGradeList) {
+                String name = allStudents.stream()
+                        .filter(s -> s.getStudentID().equals(gv.getStudentID()))
+                        .map(Student::getStudentName)
+                        .findFirst().orElse("");
+
                 writer.println("<tr>");
                 writer.println("<td>" + (stt++) + "</td>");
                 writer.println("<td>" + gv.getStudentID() + "</td>");
@@ -340,7 +393,7 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
                 writer.println("<td>" + gv.getGradeAssessment2() + "</td>");
                 writer.println("<td>" + gv.getGradeFinal() + "</td>");
                 writer.println("<td><b>" + gv.getGradeAverage() + "</b></td>");
-                writer.println("<td>" + gv.getAbsentCount() + "</td>"); // Cột Vắng mới
+                writer.println("<td>" + gv.getAbsentCount() + "</td>");
                 writer.println("<td>" + (gv.getGradeNote() == null ? "" : gv.getGradeNote()) + "</td>");
                 writer.println("</tr>");
             }
@@ -354,18 +407,15 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
         }
     }
 
-    // 4. LƯU ĐIỂM XUỐNG DB (Giữ nguyên logic gốc)
     @FXML
     public void handleSaveGrades() {
-        if (gradeList.isEmpty()) {
+        if (masterGradeList.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Trống", "Không có dữ liệu để lưu.");
             return;
         }
 
         boolean allSuccess = true;
-        // Trích xuất lại Grade object từ ViewModel để gửi tới DAO
-        for (GradeViewModel gv : gradeList) {
-            // Tạo Grade object với các giá trị điểm đã sửa từ VM
+        for (GradeViewModel gv : masterGradeList) {
             Grade g = new Grade(
                     gv.getStudentID(),
                     gv.getCourseClassID(),
@@ -388,7 +438,6 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
             showAlert(Alert.AlertType.ERROR, "Cảnh báo", "Có lỗi khi lưu một số dòng điểm.");
         }
     }
-
 
     @FXML
     public void handleLogout(ActionEvent event) { /* Giữ nguyên logic gốc */
@@ -413,26 +462,20 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
         alert.showAndWait();
     }
 
-    // --- VIEW MODEL CHO BẢNG ĐIỂM (ĐÃ FIX) ---
-    // Lớp này gói gọn dữ liệu Grade và AbsentCount, sử dụng SimpleDoubleProperty
-    // để hỗ trợ việc chỉnh sửa điểm trực tiếp trên TableView
+    // --- VIEW MODEL CHO BẢNG ĐIỂM ---
     public static class GradeViewModel {
-        // Thuộc tính Grade gốc
         private final String studentID;
         private final String courseClassID;
         private final String semesterID;
 
-        // Thuộc tính cho phép sửa (Properties)
         private final SimpleDoubleProperty gradeAssessment1;
         private final SimpleDoubleProperty gradeAssessment2;
         private final SimpleDoubleProperty gradeFinal;
         private final SimpleDoubleProperty gradeAverage;
         private SimpleStringProperty gradeNote;
 
-        // Thuộc tính mới
         private final SimpleIntegerProperty absentCount;
 
-        // Cần đảm bảo rằng Grade Model có constructor tương ứng (đã làm ở các bước trước)
         public GradeViewModel(Grade grade, int absentCount) {
             this.studentID = grade.getStudentID();
             this.courseClassID = grade.getCourseClassID();
@@ -446,7 +489,6 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
             this.absentCount = new SimpleIntegerProperty(absentCount);
         }
 
-        // --- Getters (Cần cho PropertyValueFactory) ---
         public String getStudentID() { return studentID; }
         public String getCourseClassID() { return courseClassID; }
         public String getSemesterID() { return semesterID; }
@@ -458,7 +500,6 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
         public double getGradeFinal() { return gradeFinal.get(); }
         public double getGradeAverage() { return gradeAverage.get(); }
 
-        // --- Property Getters ---
         public SimpleDoubleProperty gradeAssessment1Property() { return gradeAssessment1; }
         public SimpleDoubleProperty gradeAssessment2Property() { return gradeAssessment2; }
         public SimpleDoubleProperty gradeFinalProperty() { return gradeFinal; }
@@ -466,7 +507,6 @@ public class ProfessorDashboardController implements Initializable, AttendanceCo
         public SimpleStringProperty gradeNoteProperty() { return gradeNote; }
         public SimpleIntegerProperty absentCountProperty() { return absentCount; }
 
-        // --- Setters (Cần cho onEditCommit) ---
         public void setGradeAssessment1(double value) { gradeAssessment1.set(value); }
         public void setGradeAssessment2(double value) { gradeAssessment2.set(value); }
         public void setGradeFinal(double value) { gradeFinal.set(value); }

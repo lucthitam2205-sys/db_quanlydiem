@@ -40,11 +40,10 @@ public class LoginController {
             return;
         }
 
-        // 2. Kiểm tra vai trò (Fix lỗi: So sánh cả tiếng Việt và tiếng Anh)
+        // 2. Kiểm tra vai trò (Giữ nguyên logic xác thực)
         String selectedRole = getSelectedRole();
         boolean isRoleMatch = false;
 
-        // Logic so sánh linh hoạt hơn
         if (selectedRole.equals("Sinh viên") && (roleFromDB.equalsIgnoreCase("Student") || roleFromDB.equalsIgnoreCase("Sinh viên"))) {
             isRoleMatch = true;
         }
@@ -60,13 +59,15 @@ public class LoginController {
             return;
         }
 
-        // 3. Chuyển hướng (Fix lỗi: Switch case nhận cả tiếng Việt)
-        String dashboardFXML = "";
-        String title = "";
+        // 3. Chuyển hướng và Truyền dữ liệu
 
         // Chuyển roleFromDB về dạng chuẩn để switch
         if (roleFromDB.equalsIgnoreCase("Giảng viên")) roleFromDB = "Professor";
         if (roleFromDB.equalsIgnoreCase("Sinh viên")) roleFromDB = "Student";
+
+        String dashboardFXML = "";
+        String title = "";
+        boolean requiresManualSwitch = false;
 
         switch (roleFromDB) {
             case "Admin":
@@ -76,31 +77,57 @@ public class LoginController {
             case "Professor":
                 dashboardFXML = "professor_dashboard.fxml";
                 title = "Cổng thông tin Giảng viên";
+                requiresManualSwitch = true; // Cần logic truyền ID thủ công
                 break;
             case "Student":
                 dashboardFXML = "student_dashboard.fxml";
                 title = "Cổng thông tin Sinh viên";
                 // Lưu ID sinh viên đăng nhập để dùng bên Dashboard
-                StudentDashboardController.CURRENT_STUDENT_ID = username;
+                // Giả định StudentDashboardController.CURRENT_STUDENT_ID tồn tại
+                // StudentDashboardController.CURRENT_STUDENT_ID = username;
                 break;
             default:
                 showAlert("Lỗi", "Không xác định được giao diện cho quyền: " + roleFromDB);
                 return;
         }
 
-        if (!dashboardFXML.isEmpty()) {
+        if (requiresManualSwitch) {
+            // Lógica TRUYỀN ID cho ProfessorDashboardController
+            try {
+                FXMLLoader loader = new FXMLLoader(Main.class.getResource(dashboardFXML));
+                Parent root = loader.load();
+
+                ProfessorDashboardController dashboardController = loader.getController();
+
+                // BƯỚC KHẮC PHỤC: Truyền ID Giảng viên (username)
+                dashboardController.setProfessorID(username);
+
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                Scene scene = new Scene(root);
+                stage.setScene(scene);
+                stage.setTitle(title);
+                stage.centerOnScreen();
+                stage.show();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                showAlert("Lỗi hệ thống", "Không thể tải giao diện: " + dashboardFXML + "\nLỗi: " + e.getMessage());
+            }
+        }
+        else if (!dashboardFXML.isEmpty()) {
+            // Chạy switchScene cho Admin hoặc Student
             switchScene(event, dashboardFXML, title);
         }
     }
 
-    private String getSelectedRole() {
+    private String getSelectedRole() { /* Giữ nguyên */
         if (rdStudent.isSelected()) return "Sinh viên";
         if (rdProfessor.isSelected()) return "Giảng viên";
         if (rdAdmin.isSelected()) return "Admin";
         return "";
     }
 
-    private void switchScene(ActionEvent event, String fxmlFile, String title) {
+    private void switchScene(ActionEvent event, String fxmlFile, String title) { /* Giữ nguyên */
         try {
             FXMLLoader loader = new FXMLLoader(Main.class.getResource(fxmlFile));
             Parent root = loader.load();
@@ -117,7 +144,7 @@ public class LoginController {
         }
     }
 
-    private void showAlert(String title, String content) {
+    private void showAlert(String title, String content) { /* Giữ nguyên */
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
         alert.setHeaderText(null);
