@@ -8,11 +8,11 @@ import java.sql.SQLException;
         // THAY ĐỔI CÁC THÔNG SỐ NÀY CHO PHÙ HỢP
 
         // Tên database bạn đã tạo trong MySQL
-        private static final String DB_NAME = "db_quanlydiem";
+        private static final String DB_NAME = "StudentManagementDB";
         // Tên đăng nhập MySQL
         private static final String USERNAME = "root";
         // Mật khẩu của MySQL của bạn
-        private static final String PASSWORD = "Luctam@1504"; //
+        private static final String PASSWORD = "Van0912152982"; //
         // --- (Các thông số khác thường giữ nguyên) ---
         private static final String HOST = "localhost"; // 127.0.0.1
         private static final int PORT = 3306; // Cổng mặc định của MySQL

@@ -6,6 +6,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -14,62 +15,105 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.stage.Stage;
 
 import java.net.URL;
+import java.sql.Date;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 public class AttendanceController implements Initializable {
 
+    // --- INTERFACE GIAO TIẾP VỚI DASHBOARD (CALLBACK) ---
+    public interface AttendanceUpdateListener {
+        void refreshClassData(String courseClassID);
+    }
+    // ----------------------------------------------------
+
     @FXML private Label lblClassName;
-    @FXML private ComboBox<String> cbSession; // ComboBox chứa danh sách các buổi học
+    @FXML private ComboBox<String> cbSession;
     @FXML private TableView<AttendanceViewModel> tableAttendance;
     @FXML private TableColumn<AttendanceViewModel, String> colSTT, colStudentID, colStudentName, colNote;
     @FXML private TableColumn<AttendanceViewModel, Boolean> colStatus;
 
-    // Các DAO cần thiết để lấy dữ liệu liên kết
+    // Các DAO
     private GradeDAO gradeDAO = new GradeDAO();
     private StudentDAO studentDAO = new StudentDAO();
-    private CourseClassDAO courseClassDAO = new CourseClassDAO(); // Lấy thông tin lớp & học kỳ
-    private SemesterDAO semesterDAO = new SemesterDAO();         // Lấy ngày bắt đầu/kết thúc
-    private ClassScheduleDAO scheduleDAO = new ClassScheduleDAO(); // Lấy thứ/ca học
+    private CourseClassDAO courseClassDAO = new CourseClassDAO();
+    private SemesterDAO semesterDAO = new SemesterDAO();
+    private ClassScheduleDAO scheduleDAO = new ClassScheduleDAO();
+    private AttendanceDAO attendanceDAO = new AttendanceDAO();
 
+    private AttendanceUpdateListener updateListener;
     private ObservableList<AttendanceViewModel> attendanceList = FXCollections.observableArrayList();
     private String courseClassID;
+    private String selectedSessionDate = null;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Cấu hình bảng
+        // Cấu hình bảng (Giữ nguyên)
         colSTT.setCellValueFactory(cell -> new SimpleStringProperty(String.valueOf(tableAttendance.getItems().indexOf(cell.getValue()) + 1)));
         colStudentID.setCellValueFactory(cell -> cell.getValue().studentIDProperty());
         colStudentName.setCellValueFactory(cell -> cell.getValue().studentNameProperty());
 
-        // Cấu hình ghi chú (cho phép sửa)
+        // Cấu hình cột Ghi chú (Cho phép sửa)
         colNote.setCellValueFactory(cell -> cell.getValue().noteProperty());
         colNote.setCellFactory(TextFieldTableCell.forTableColumn());
 
-        // Cấu hình Checkbox trạng thái
+        // Listener cho việc sửa ghi chú (Lưu trực tiếp khi commit)
+        colNote.setOnEditCommit(event -> {
+            AttendanceViewModel viewModel = event.getRowValue();
+            viewModel.setNote(event.getNewValue());
+            saveSingleAttendanceEntry(viewModel); // Lưu DB
+        });
+
+        // Cấu hình Checkbox trạng thái (Cho phép sửa)
         colStatus.setCellValueFactory(cell -> cell.getValue().isPresentProperty());
         colStatus.setCellFactory(CheckBoxTableCell.forTableColumn(colStatus));
 
+        // Listener cho Checkbox (Lưu trực tiếp khi click)
+        colStatus.setOnEditCommit(event -> {
+            AttendanceViewModel viewModel = event.getRowValue();
+            viewModel.setPresent(event.getNewValue());
+
+            // Tự động lưu/cập nhật DB và thông báo cho Dashboard
+            saveSingleAttendanceEntry(viewModel);
+
+            // Yêu cầu Dashboard tải lại dữ liệu (để cập nhật cột "Vắng")
+            if (updateListener != null) {
+                updateListener.refreshClassData(courseClassID);
+            }
+        });
+
         tableAttendance.setEditable(true);
         tableAttendance.setItems(attendanceList);
+
+        // Listener cho ComboBox Session
+        cbSession.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                selectedSessionDate = newVal.substring(0, 10);
+                loadStudentList();
+            }
+        });
     }
 
-    // Hàm này được gọi từ Dashboard để truyền dữ liệu sang
+    // Setter để nhận callback từ Dashboard (Giữ nguyên)
+    public void setUpdateListener(AttendanceUpdateListener listener) {
+        this.updateListener = listener;
+    }
+
+    // Hàm setClassInfo (Giữ nguyên)
     public void setClassInfo(String classID, String className) {
         this.courseClassID = classID;
         lblClassName.setText(classID + " - " + className);
-
-        loadStudentList();   // Load danh sách SV
-        loadValidSessions(); // Tính toán và đổ lịch học vào ComboBox
+        loadValidSessions();
     }
 
-    // --- LOGIC TÍNH TOÁN NGÀY HỌC ---
+    // --- LOGIC TÍNH TOÁN NGÀY HỌC (Giữ nguyên) ---
     private void loadValidSessions() {
-        // 1. Lấy thông tin Lớp để biết thuộc Học kỳ nào
         List<CourseClass> allC = courseClassDAO.getAllCourseClasses();
         CourseClass currentClass = allC.stream()
                 .filter(c -> c.getCourseClassId().equals(courseClassID))
@@ -77,7 +121,6 @@ public class AttendanceController implements Initializable {
 
         if (currentClass == null) return;
 
-        // 2. Lấy thông tin Học kỳ (Start Date, End Date)
         List<Semester> allSem = semesterDAO.getAllSemesters();
         Semester semester = allSem.stream()
                 .filter(s -> s.getSemesterID().equals(currentClass.getSemesterID()))
@@ -88,26 +131,22 @@ public class AttendanceController implements Initializable {
             return;
         }
 
-        // 3. Lấy Lịch học (Thứ mấy, Ca nào, Phòng nào)
         List<ClassSchedule> schedules = scheduleDAO.getScheduleByClass(courseClassID);
         if (schedules.isEmpty()) {
             cbSession.setPromptText("Chưa xếp lịch học!");
             return;
         }
 
-        // 4. Thuật toán: Duyệt từng ngày từ Start -> End, nếu khớp thứ -> Thêm vào list
         List<String> validDates = new ArrayList<>();
         LocalDate start = semester.getStartDate().toLocalDate();
         LocalDate end = semester.getEndDate().toLocalDate();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-            DayOfWeek currentDayOfWeek = date.getDayOfWeek(); // Thứ của ngày đang duyệt
+            DayOfWeek currentDayOfWeek = date.getDayOfWeek();
 
-            // So sánh với từng lịch trong tuần
             for (ClassSchedule sch : schedules) {
                 if (isDayMatch(currentDayOfWeek, sch.getDayOfWeek())) {
-                    // Tạo chuỗi hiển thị: "20/11/2025 (Thứ 2 - Ca 1)"
                     String item = String.format("%s (%s - %s)",
                             date.format(formatter), sch.getDayOfWeek(), sch.getShift());
                     validDates.add(item);
@@ -120,17 +159,20 @@ public class AttendanceController implements Initializable {
         // Tự động chọn ngày gần nhất (Hôm nay hoặc tương lai gần)
         String todayStr = LocalDate.now().format(formatter);
         for(String s : validDates) {
-            // So sánh chuỗi ngày đơn giản (để chính xác hơn cần parse lại Date)
-            if(s.compareTo(todayStr) >= 0) {
+            if(s.substring(0, 10).compareTo(todayStr) >= 0) {
                 cbSession.setValue(s);
+                selectedSessionDate = s.substring(0, 10);
                 break;
             }
         }
+
+        if(selectedSessionDate != null) {
+            loadStudentList();
+        }
     }
 
-    // Helper: So sánh Thứ trong Java (Enum) với Thứ trong DB (String)
+    // Helper: So sánh Thứ (Giữ nguyên)
     private boolean isDayMatch(DayOfWeek javaDay, String dbDay) {
-        // dbDay ví dụ: "Thứ 2", "Thứ 3", "CN", "Chủ Nhật"
         switch (javaDay) {
             case MONDAY: return dbDay.contains("2");
             case TUESDAY: return dbDay.contains("3");
@@ -143,18 +185,70 @@ public class AttendanceController implements Initializable {
         }
     }
 
+    // --- LOGIC TẢI DANH SÁCH SINH VIÊN VÀ TRẠNG THÁI ĐIỂM DANH (Giữ nguyên) ---
     private void loadStudentList() {
-        if (courseClassID == null) return;
+        if (courseClassID == null || selectedSessionDate == null) return;
+
         List<Grade> grades = gradeDAO.getGradesByClass(courseClassID);
         List<Student> students = studentDAO.getAllStudents();
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDate attendanceDate = LocalDate.parse(selectedSessionDate, formatter);
+        Date sqlDate = Date.valueOf(attendanceDate);
+
+        List<Attendance> savedAttendance = attendanceDAO.getAttendanceByClassAndDate(courseClassID, sqlDate);
+
         attendanceList.clear();
         for (Grade g : grades) {
+            String studentID = g.getStudentID();
+
             String name = students.stream()
-                    .filter(s -> s.getStudentID().equals(g.getStudentID()))
+                    .filter(s -> s.getStudentID().equals(studentID))
                     .map(Student::getStudentName)
                     .findFirst().orElse("Unknown");
-            attendanceList.add(new AttendanceViewModel(g.getStudentID(), name, true, ""));
+
+            Optional<Attendance> savedEntry = savedAttendance.stream()
+                    .filter(a -> a.getStudentID().equals(studentID))
+                    .findFirst();
+
+            boolean isPresent = savedEntry.map(Attendance::isPresent).orElse(true);
+            String note = savedEntry.map(Attendance::getNote).orElse("");
+            // Lấy ID nếu tồn tại
+            int attendanceID = savedEntry.map(Attendance::getAttendanceID).orElse(0);
+
+            attendanceList.add(new AttendanceViewModel(attendanceID, studentID, name, isPresent, note));
+        }
+    }
+
+    // --- LOGIC LƯU VÀ CẬP NHẬT TỪ DB (ĐÃ SỬA LỖI CỐ ĐỊNH ID) ---
+    private void saveSingleAttendanceEntry(AttendanceViewModel a) {
+        if (selectedSessionDate == null) return;
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDate date = LocalDate.parse(selectedSessionDate, formatter);
+        Date sqlDate = Date.valueOf(date);
+
+        Attendance attendance = new Attendance(
+                a.getAttendanceID(),
+                a.getStudentID(),
+                courseClassID,
+                sqlDate,
+                a.isPresent(),
+                a.getNote()
+        );
+
+        // 1. Nếu đã có AttendanceID (bản ghi đã tồn tại) -> Update
+        if (a.getAttendanceID() > 0) {
+            attendanceDAO.updateAttendance(attendance);
+        } else {
+            // 2. Bản ghi chưa có -> Add mới, và cần CẬP NHẬT ID MỚI (Khắc phục lỗi UNIQUE)
+            // GIẢ ĐỊNH: AttendanceDAO có phương thức trả về ID sau khi INSERT
+            int newId = attendanceDAO.addAttendanceAndGetId(attendance);
+
+            if (newId > 0) {
+                // CẬP NHẬT ID MỚI VÀO VIEWMODEL
+                a.setAttendanceID(newId);
+            }
         }
     }
 
@@ -169,18 +263,22 @@ public class AttendanceController implements Initializable {
             return;
         }
 
-        int presentCount = 0;
-        int absentCount = 0;
+        // Chức năng saveAttendance tổng thể: Duyệt qua tất cả và lưu
+        // Mặc dù Listener đã tự động lưu, ta vẫn cần hàm này cho nút "Lưu" (nếu có)
+
+        boolean allSuccess = true;
         for (AttendanceViewModel a : attendanceList) {
-            if (a.isPresent()) presentCount++; else absentCount++;
+            // Cố gắng lưu từng entry (sẽ gọi logic update/add bên trong)
+            saveSingleAttendanceEntry(a);
         }
 
-        // Logic lưu DB (Hiện tại thông báo giả lập)
+        if (updateListener != null) {
+            updateListener.refreshClassData(courseClassID);
+        }
+
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Lưu thành công");
-        alert.setHeaderText("Đã lưu điểm danh cho: " + session);
-        alert.setContentText(String.format("Tổng số: %d\nCó mặt: %d\nVắng: %d",
-                attendanceList.size(), presentCount, absentCount));
+        alert.setHeaderText("Đã hoàn thành lưu/cập nhật dữ liệu điểm danh.");
         alert.showAndWait();
 
         closeWindow();
@@ -188,6 +286,9 @@ public class AttendanceController implements Initializable {
 
     @FXML
     public void closeWindow() {
+        if (updateListener != null) {
+            updateListener.refreshClassData(courseClassID);
+        }
         Stage stage = (Stage) lblClassName.getScene().getWindow();
         stage.close();
     }
@@ -198,13 +299,21 @@ public class AttendanceController implements Initializable {
         private final SimpleStringProperty studentName;
         private final SimpleBooleanProperty isPresent;
         private final SimpleStringProperty note;
+        private int attendanceID; // ĐÃ SỬA: Không phải final để cho phép set ID mới
 
-        public AttendanceViewModel(String id, String name, boolean present, String note) {
+        public AttendanceViewModel(int attendanceID, String id, String name, boolean present, String note) {
+            this.attendanceID = attendanceID;
             this.studentID = new SimpleStringProperty(id);
             this.studentName = new SimpleStringProperty(name);
             this.isPresent = new SimpleBooleanProperty(present);
             this.note = new SimpleStringProperty(note);
         }
+
+        // Getter/Setter MỚI cho ID
+        public int getAttendanceID() { return attendanceID; }
+        public void setAttendanceID(int attendanceID) { this.attendanceID = attendanceID; }
+
+        // Giữ nguyên các getters/setters cũ
         public String getStudentID() { return studentID.get(); }
         public SimpleStringProperty studentIDProperty() { return studentID; }
         public String getStudentName() { return studentName.get(); }

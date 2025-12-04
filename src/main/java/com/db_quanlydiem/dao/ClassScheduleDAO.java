@@ -8,7 +8,6 @@ import java.util.List;
 
 public class ClassScheduleDAO {
 
-    // ... (Các hàm cũ giữ nguyên) ...
     // 1. Lấy tất cả lịch học
     public List<ClassSchedule> getAllSchedules() {
         List<ClassSchedule> list = new ArrayList<>();
@@ -110,10 +109,9 @@ public class ClassScheduleDAO {
         return list;
     }
 
-    // 7. Lấy lịch dạy theo Giảng viên (HÀM MỚI)
+    // 7. Lấy lịch dạy theo Giảng viên (Giữ nguyên)
     public List<ClassSchedule> getSchedulesByProfessor(String professorID) {
         List<ClassSchedule> list = new ArrayList<>();
-        // Join với bảng CourseClass để lọc theo ProfessorID
         String sql = "SELECT cs.* FROM ClassSchedule cs " +
                 "JOIN CourseClass cc ON cs.CourseClassID = cc.CourseClassId " +
                 "WHERE cc.ProfessorID = ? " +
@@ -131,6 +129,49 @@ public class ClassScheduleDAO {
                         rs.getString("Shift"),
                         rs.getString("Room")
                 ));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return list;
+    }
+
+    // 8. Lấy lịch dạy chi tiết theo Giảng viên (Phương thức MỚI để hỗ trợ lọc Tháng/Năm)
+    /*
+     * Phương thức này trả về List<Object[]> với các trường sau (theo thứ tự):
+     * [0] - Integer: ScheduleID
+     * [1] - String: CourseClassID
+     * [2] - String: DayOfWeek
+     * [3] - String: Shift
+     * [4] - String: Room
+     * [5] - String: SemesterID
+     * [6] - Date: StartDate (của Semester)
+     * [7] - Date: EndDate (của Semester)
+     */
+    public List<Object[]> getDetailedSchedulesByProfessor(String professorID) {
+        List<Object[]> list = new ArrayList<>();
+        // Join với CourseClass và Semester để lấy đầy đủ thông tin thời gian học kỳ
+        String sql = "SELECT cs.ScheduleID, cs.CourseClassID, cs.DayOfWeek, cs.Shift, cs.Room, " +
+                "cc.SemesterID, s.StartDate, s.EndDate " +
+                "FROM ClassSchedule cs " +
+                "JOIN CourseClass cc ON cs.CourseClassID = cc.CourseClassId " +
+                "JOIN Semester s ON cc.SemesterID = s.SemesterID " +
+                "WHERE cc.ProfessorID = ? " +
+                "ORDER BY s.StartDate, FIELD(cs.DayOfWeek, 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'), cs.Shift";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, professorID);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                list.add(new Object[] {
+                        rs.getInt("ScheduleID"),
+                        rs.getString("CourseClassID"),
+                        rs.getString("DayOfWeek"),
+                        rs.getString("Shift"),
+                        rs.getString("Room"),
+                        rs.getString("SemesterID"),
+                        rs.getDate("StartDate"), // java.sql.Date
+                        rs.getDate("EndDate")    // java.sql.Date
+                });
             }
         } catch (SQLException e) { e.printStackTrace(); }
         return list;
