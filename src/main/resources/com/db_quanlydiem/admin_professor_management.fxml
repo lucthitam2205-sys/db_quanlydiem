@@ -120,7 +120,6 @@
                                     </font>
                                 </Label>
 
-                                <!-- Nhóm 1: Thông tin chính -->
                                 <VBox spacing="15.0">
                                     <children>
                                         <Label text="I. Thông tin cơ bản" textFill="#3498db">
@@ -141,34 +140,28 @@
                                             </rowConstraints>
                                             <children>
                                                 <Label text="Mã GV (*):" textFill="#555555">
-                                       <font>
-                                          <Font size="13.0" />
-                                       </font></Label>
+                                                    <font><Font size="13.0" /></font>
+                                                </Label>
                                                 <TextField fx:id="txtID" promptText="VD: GV001" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7; -fx-border-radius: 3; -fx-padding: 8;" GridPane.columnIndex="1">
-                                       <font>
-                                          <Font size="13.0" />
-                                       </font></TextField>
+                                                    <font><Font size="13.0" /></font>
+                                                </TextField>
 
                                                 <Label text="Họ tên (*):" textFill="#555555" GridPane.rowIndex="1">
-                                       <font>
-                                          <Font size="13.0" />
-                                       </font></Label>
+                                                    <font><Font size="13.0" /></font>
+                                                </Label>
                                                 <TextField fx:id="txtName" promptText="Nhập họ và tên" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7; -fx-border-radius: 3; -fx-padding: 8;" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                                       <font>
-                                          <Font size="13.0" />
-                                       </font></TextField>
+                                                    <font><Font size="13.0" /></font>
+                                                </TextField>
 
                                                 <Label text="Chức danh:" textFill="#555555" GridPane.rowIndex="2">
-                                       <font>
-                                          <Font size="13.0" />
-                                       </font></Label>
+                                                    <font><Font size="13.0" /></font>
+                                                </Label>
                                                 <ComboBox fx:id="cbTitle" maxWidth="1.7976931348623157E308" prefHeight="33.0" prefWidth="360.0" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7;" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                             </children>
                                         </GridPane>
                                     </children>
                                 </VBox>
 
-                                <!-- Nhóm 2: Liên hệ -->
                                 <VBox spacing="15.0">
                                     <children>
                                         <Label text="II. Thông tin liên hệ" textFill="#3498db">
@@ -189,80 +182,70 @@
                                             </rowConstraints>
                                             <children>
                                                 <Label text="Email:" textFill="#555555">
-                                       <font>
-                                          <Font size="13.0" />
-                                       </font></Label>
+                                                    <font><Font size="13.0" /></font>
+                                                </Label>
                                                 <TextField fx:id="txtEmail" promptText="email@huce.edu.vn" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7; -fx-border-radius: 3; -fx-padding: 8;" GridPane.columnIndex="1">
-                                       <font>
-                                          <Font size="13.0" />
-                                       </font></TextField>
+                                                    <font><Font size="13.0" /></font>
+                                                </TextField>
 
                                                 <Label text="Số điện thoại:" textFill="#555555" GridPane.rowIndex="1">
-                                       <font>
-                                          <Font size="13.0" />
-                                       </font></Label>
+                                                    <font><Font size="13.0" /></font>
+                                                </Label>
                                                 <TextField fx:id="txtPhone" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7; -fx-border-radius: 3; -fx-padding: 8;" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                                       <font>
-                                          <Font size="13.0" />
-                                       </font></TextField>
+                                                    <font><Font size="13.0" /></font>
+                                                </TextField>
 
                                                 <Label text="Quê quán:" textFill="#555555" GridPane.rowIndex="2">
-                                       <font>
-                                          <Font size="13.0" />
-                                       </font></Label>
+                                                    <font><Font size="13.0" /></font>
+                                                </Label>
                                                 <TextField fx:id="txtHometown" style="-fx-background-color: #f8f9fa; -fx-border-color: #bdc3c7; -fx-border-radius: 3; -fx-padding: 8;" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                                       <font>
-                                          <Font size="13.0" />
-                                       </font></TextField>
+                                                    <font><Font size="13.0" /></font>
+                                                </TextField>
                                             </children>
                                         </GridPane>
                                     </children>
                                 </VBox>
-
-                                <Region VBox.vgrow="ALWAYS" />
-
-                                <!-- Action Buttons -->
-                                <HBox alignment="CENTER_RIGHT" spacing="15.0">
-                                    <children>
-                                        <Button mnemonicParsing="false" onAction="#handleAdd" prefWidth="100.0" style="-fx-background-color: #27ae60; -fx-cursor: hand;" text="✚ Thêm" textFill="WHITE">
-                                            <font>
-                                                <Font name="System Bold" size="14.0" />
-                                            </font>
-                                            <padding>
-                                                <Insets bottom="10.0" top="10.0" />
-                                            </padding>
-                                        </Button>
-                                        <Button mnemonicParsing="false" onAction="#handleUpdate" prefWidth="100.0" style="-fx-background-color: #f39c12; -fx-cursor: hand;" text="✎ Sửa" textFill="WHITE">
-                                            <font>
-                                                <Font name="System Bold" size="14.0" />
-                                            </font>
-                                            <padding>
-                                                <Insets bottom="10.0" top="10.0" />
-                                            </padding>
-                                        </Button>
-                                        <Button mnemonicParsing="false" onAction="#handleDelete" prefWidth="100.0" style="-fx-background-color: #c0392b; -fx-cursor: hand;" text="✖ Xóa" textFill="WHITE">
-                                            <font>
-                                                <Font name="System Bold" size="14.0" />
-                                            </font>
-                                            <padding>
-                                                <Insets bottom="10.0" top="10.0" />
-                                            </padding>
-                                        </Button>
-                                        <Button mnemonicParsing="false" onAction="#handleClear" prefWidth="100.0" style="-fx-background-color: #95a5a6; -fx-cursor: hand;" text="Hủy" textFill="WHITE">
-                                            <font>
-                                                <Font name="System Bold" size="14.0" />
-                                            </font>
-                                            <padding>
-                                                <Insets bottom="10.0" top="10.0" />
-                                            </padding>
-                                        </Button>
-                                    </children>
-                                </HBox>
-
                             </children>
                         </VBox>
                     </content>
                 </ScrollPane>
+
+                <HBox alignment="CENTER_RIGHT" spacing="15.0" style="-fx-padding: 5 0 0 0;">
+                    <children>
+                        <Button mnemonicParsing="false" onAction="#handleAdd" prefWidth="100.0" style="-fx-background-color: #27ae60; -fx-cursor: hand;" text="✚ Thêm" textFill="WHITE">
+                            <font>
+                                <Font name="System Bold" size="14.0" />
+                            </font>
+                            <padding>
+                                <Insets bottom="10.0" top="10.0" />
+                            </padding>
+                        </Button>
+                        <Button mnemonicParsing="false" onAction="#handleUpdate" prefWidth="100.0" style="-fx-background-color: #f39c12; -fx-cursor: hand;" text="✎ Sửa" textFill="WHITE">
+                            <font>
+                                <Font name="System Bold" size="14.0" />
+                            </font>
+                            <padding>
+                                <Insets bottom="10.0" top="10.0" />
+                            </padding>
+                        </Button>
+                        <Button mnemonicParsing="false" onAction="#handleDelete" prefWidth="100.0" style="-fx-background-color: #c0392b; -fx-cursor: hand;" text="✖ Xóa" textFill="WHITE">
+                            <font>
+                                <Font name="System Bold" size="14.0" />
+                            </font>
+                            <padding>
+                                <Insets bottom="10.0" top="10.0" />
+                            </padding>
+                        </Button>
+                        <Button mnemonicParsing="false" onAction="#handleClear" prefWidth="100.0" style="-fx-background-color: #95a5a6; -fx-cursor: hand;" text="Hủy" textFill="WHITE">
+                            <font>
+                                <Font name="System Bold" size="14.0" />
+                            </font>
+                            <padding>
+                                <Insets bottom="10.0" top="10.0" />
+                            </padding>
+                        </Button>
+                    </children>
+                </HBox>
             </children>
         </VBox>
     </center>

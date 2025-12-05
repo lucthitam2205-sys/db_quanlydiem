@@ -18,6 +18,8 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
@@ -30,6 +32,7 @@ public class AdminScheduleController implements Initializable {
 
     // Form Inputs
     @FXML private ComboBox<CourseClass> cbClass;
+    @FXML private DatePicker dpDate; // <-- MỚI: DatePicker để chọn ngày
     @FXML private ComboBox<String> cbDay;
     @FXML private TextField txtShift, txtRoom;
 
@@ -53,13 +56,37 @@ public class AdminScheduleController implements Initializable {
         // Load danh sách lớp vào ComboBox
         cbClass.setItems(FXCollections.observableArrayList(courseClassDAO.getAllCourseClasses()));
 
-        // 3. Load Table Data
+        // --- 3. LOGIC TỰ ĐỘNG ĐIỀN THỨ TỪ NGÀY ---
+        dpDate.setOnAction(event -> {
+            LocalDate date = dpDate.getValue();
+            if (date != null) {
+                String thu = convertDayOfWeek(date.getDayOfWeek());
+                cbDay.setValue(thu);
+            }
+        });
+        // ------------------------------------------
+
+        // 4. Load Table Data
         loadData();
 
-        // 4. Selection Event
+        // 5. Selection Event
         tableSchedule.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) fillForm(newVal);
         });
+    }
+
+    // Helper: Chuyển đổi DayOfWeek (Java) sang String (Tiếng Việt)
+    private String convertDayOfWeek(DayOfWeek day) {
+        switch (day) {
+            case MONDAY: return "Thứ 2";
+            case TUESDAY: return "Thứ 3";
+            case WEDNESDAY: return "Thứ 4";
+            case THURSDAY: return "Thứ 5";
+            case FRIDAY: return "Thứ 6";
+            case SATURDAY: return "Thứ 7";
+            case SUNDAY: return "Chủ Nhật";
+            default: return "";
+        }
     }
 
     private void loadData() {
@@ -79,6 +106,7 @@ public class AdminScheduleController implements Initializable {
         cbDay.setValue(cs.getDayOfWeek());
         txtShift.setText(cs.getShift());
         txtRoom.setText(cs.getRoom());
+        dpDate.setValue(null); // Reset DatePicker khi load form từ bảng
     }
 
     @FXML
@@ -169,25 +197,20 @@ public class AdminScheduleController implements Initializable {
         cbDay.setValue(null);
         txtShift.clear();
         txtRoom.clear();
+        dpDate.setValue(null);
         tableSchedule.getSelectionModel().clearSelection();
     }
 
     @FXML
     public void handleBack() {
         try {
-            // Load lại trang Admin Dashboard
             FXMLLoader loader = new FXMLLoader(Main.class.getResource("admin_dashboard.fxml"));
             Parent root = loader.load();
-
-            // Lấy Stage hiện tại từ một node bất kỳ (ví dụ bảng)
             Stage stage = (Stage) tableSchedule.getScene().getWindow();
-
-            // Chuyển cảnh
             stage.setScene(new Scene(root));
             stage.setTitle("Hệ thống Quản trị Đào tạo (Admin)");
             stage.centerOnScreen();
             stage.show();
-
         } catch (IOException e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi điều hướng", "Không thể quay về Dashboard: " + e.getMessage());

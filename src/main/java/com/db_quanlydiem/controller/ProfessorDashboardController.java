@@ -1,14 +1,8 @@
 package com.db_quanlydiem.controller;
 
 import com.db_quanlydiem.Main;
-import com.db_quanlydiem.dao.CourseClassDAO;
-import com.db_quanlydiem.dao.GradeDAO;
-import com.db_quanlydiem.dao.ProfessorDAO;
-import com.db_quanlydiem.dao.StudentDAO;
-import com.db_quanlydiem.model.CourseClass;
-import com.db_quanlydiem.model.Grade;
-import com.db_quanlydiem.model.Professor;
-import com.db_quanlydiem.model.Student;
+import com.db_quanlydiem.dao.*;
+import com.db_quanlydiem.model.*;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -38,15 +32,15 @@ import java.util.stream.Collectors;
 public class ProfessorDashboardController implements Initializable {
 
     // --- 1. KHAI BÁO FXML ---
-    @FXML private Label lblProfName, lblProfID, lblTitle, lblPhone, lblEmail, lblHometown; // Đã thêm lblHometown
+    @FXML private Label lblProfName, lblProfID, lblTitle, lblPhone, lblEmail, lblHometown;
     @FXML private ComboBox<CourseClass> cbClass;
-    @FXML private TextField txtSearchStudent;
+    @FXML private TextField txtSearchStudent; // Ô tìm kiếm
 
     // TableView và Columns
     @FXML private TableView<Grade> tableGrades;
     @FXML private TableColumn<Grade, String> colSTT, colStudentID, colStudentName, colNote;
     @FXML private TableColumn<Grade, Double> colScore1, colScore2, colScoreFinal, colScoreAvg;
-
+    @FXML private TableColumn<Grade, Integer> colAbsent;
     // Thống kê
     @FXML private Label lblTotalStudents, lblRateExcellent, lblRateGood, lblRateFair, lblRateAverage;
 
@@ -55,10 +49,12 @@ public class ProfessorDashboardController implements Initializable {
     private GradeDAO gradeDAO = new GradeDAO();
     private StudentDAO studentDAO = new StudentDAO();
     private ProfessorDAO professorDAO = new ProfessorDAO();
+    private ReviewRequestDAO reviewRequestDAO = new ReviewRequestDAO(); // DAO Phúc khảo
+    private AuditLogDAO auditLogDAO = new AuditLogDAO(); // DAO Nhật ký hoạt động
 
     private ObservableList<Grade> gradeList = FXCollections.observableArrayList();
 
-    // ID Giảng viên (Giả lập - Trong thực tế sẽ set từ LoginController)
+    // ID Giảng viên (Được set từ LoginController)
     public static String CURRENT_PROFESSOR_ID = "GV001";
 
     @Override
@@ -69,14 +65,14 @@ public class ProfessorDashboardController implements Initializable {
         // 2. Load danh sách lớp giảng viên dạy vào ComboBox
         loadClasses();
 
-        // 3. Cấu hình bảng điểm (Cho phép sửa)
+        // 3. Cấu hình bảng điểm (Cho phép sửa & Cảnh báo điểm liệt)
         setupTable();
 
         // 4. Sự kiện khi chọn lớp -> Load điểm
         cbClass.setOnAction(e -> loadGrades());
     }
 
-    // --- LOGIC CHÍNH ---
+    // --- LOGIC LOAD DỮ LIỆU & CẤU HÌNH BẢNG ---
 
     private void loadProfessorInfo() {
         List<Professor> professors = professorDAO.getAllProfessors();
@@ -92,7 +88,6 @@ public class ProfessorDashboardController implements Initializable {
             lblPhone.setText(currentProf.getProfessorPhone());
             lblEmail.setText(currentProf.getProfessorEmail());
 
-            // Set quê quán nếu label tồn tại trong FXML
             if (lblHometown != null) {
                 lblHometown.setText(currentProf.getProfessorHometown());
             }
@@ -109,11 +104,12 @@ public class ProfessorDashboardController implements Initializable {
     }
 
     private void setupTable() {
-        tableGrades.setEditable(true); // Quan trọng: Cho phép sửa bảng
+        tableGrades.setEditable(true);
 
         colStudentID.setCellValueFactory(new PropertyValueFactory<>("studentID"));
+        colAbsent.setCellValueFactory(new PropertyValueFactory<>("absentCount"));
+        // Hiển thị tên sinh viên từ ID (Tối ưu: Nên cache list student thay vì gọi DAO mỗi dòng)
 
-        // Hiển thị tên sinh viên (Lấy từ StudentDAO)
         colStudentName.setCellValueFactory(cellData -> {
             String sID = cellData.getValue().getStudentID();
             List<Student> students = studentDAO.getAllStudents();
@@ -124,12 +120,36 @@ public class ProfessorDashboardController implements Initializable {
             return new SimpleStringProperty(name);
         });
 
-        // Cấu hình các cột điểm cho phép sửa (Edit)
+        // Cấu hình các cột điểm cho phép sửa
         setupEditableColumn(colScore1, "gradeAssessment1");
         setupEditableColumn(colScore2, "gradeAssessment2");
         setupEditableColumn(colScoreFinal, "gradeFinal");
 
         colScoreAvg.setCellValueFactory(new PropertyValueFactory<>("gradeAverage"));
+
+        // --- TÔ MÀU CẢNH BÁO ĐIỂM LIỆT ---
+        colScoreAvg.setCellFactory(column -> new TableCell<Grade, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(String.format("%.2f", item));
+                    // Logic tô màu: < 4.0 (Trượt) -> Đỏ; >= 8.5 (Xuất sắc) -> Xanh
+                    if (item < 4.0 && item > 0) {
+                        setStyle("-fx-text-fill: red; -fx-font-weight: bold; -fx-background-color: #fadbd8;");
+                        setTooltip(new Tooltip("Cảnh báo: Sinh viên trượt môn (F)"));
+                    } else if (item >= 8.5) {
+                        setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+                    } else {
+                        setStyle("");
+                    }
+                }
+            }
+        });
+
         colNote.setCellValueFactory(new PropertyValueFactory<>("gradeNote"));
         colNote.setCellFactory(TextFieldTableCell.forTableColumn());
         colNote.setOnEditCommit(e -> e.getRowValue().setGradeNote(e.getNewValue()));
@@ -151,15 +171,13 @@ public class ProfessorDashboardController implements Initializable {
         col.setOnEditCommit(event -> {
             Grade g = event.getRowValue();
             Double newVal = event.getNewValue();
-
-            // Xử lý null
             if (newVal == null) newVal = 0.0;
 
             if (property.equals("gradeAssessment1")) g.setGradeAssessment1(newVal);
             else if (property.equals("gradeAssessment2")) g.setGradeAssessment2(newVal);
             else if (property.equals("gradeFinal")) g.setGradeFinal(newVal);
 
-            // Tự động tính lại điểm trung bình
+            // Tính lại điểm trung bình ngay lập tức (30-20-50)
             double avg = (g.getGradeAssessment1() * 0.3) + (g.getGradeAssessment2() * 0.2) + (g.getGradeFinal() * 0.5);
             g.setGradeAverage(Math.round(avg * 100.0) / 100.0);
 
@@ -173,35 +191,27 @@ public class ProfessorDashboardController implements Initializable {
         if (selectedClass == null) return;
 
         gradeList.clear();
-        List<Grade> rawGrades = gradeDAO.getGradesByClass(selectedClass.getCourseClassId());
+        List<Grade> rawData = gradeDAO.getGradesByClass(selectedClass.getCourseClassId());
 
-        // --- LOGIC FIX LỖI ĐIỂM TRUNG BÌNH ---
-        for (Grade g : rawGrades) {
-            // Tự động tính toán lại điểm trung bình dựa trên các điểm thành phần
-            // Công thức: (ĐG1 * 0.3) + (ĐG2 * 0.2) + (Cuối kỳ * 0.5)
+        // Tính toán lại điểm trung bình khi load (đề phòng DB lưu sai)
+        for (Grade g : rawData) {
             double s1 = g.getGradeAssessment1();
             double s2 = g.getGradeAssessment2();
-            double sf = g.getGradeFinal();
+            double sF = g.getGradeFinal();
 
-            // Chỉ tính nếu các điểm thành phần hợp lệ (ví dụ >= 0)
-            double avg = (s1 * 0.3) + (s2 * 0.2) + (sf * 0.5);
-
-            // Làm tròn 2 chữ số thập phân
-            avg = Math.round(avg * 100.0) / 100.0;
-
-            // Cập nhật vào đối tượng (chỉ trong RAM để hiển thị, chưa lưu DB)
-            g.setGradeAverage(avg);
+            double avg = (s1 * 0.3) + (s2 * 0.2) + (sF * 0.5);
+            g.setGradeAverage(Math.round(avg * 100.0) / 100.0);
 
             gradeList.add(g);
         }
 
         tableGrades.setItems(gradeList);
+        tableGrades.refresh();
         updateStatistics();
     }
 
     private void updateStatistics() {
         if (gradeList.isEmpty()) {
-            // Reset text về 0 nếu list trống
             lblTotalStudents.setText("0");
             lblRateExcellent.setText("0%");
             lblRateGood.setText("0%");
@@ -225,30 +235,138 @@ public class ProfessorDashboardController implements Initializable {
 
     // --- CÁC HÀM SỰ KIỆN (BUTTON ACTIONS) ---
 
-    // 1. MỞ CỬA SỔ XEM LỊCH DẠY
+    // 1. Tìm kiếm sinh viên
+    @FXML
+    public void handleSearch() {
+        String keyword = txtSearchStudent.getText().trim().toLowerCase();
+
+        if (keyword.isEmpty()) {
+            tableGrades.setItems(gradeList); // Reset về danh sách đầy đủ
+            updateStatistics();
+            return;
+        }
+
+        List<Student> allStudents = studentDAO.getAllStudents();
+        ObservableList<Grade> filteredList = FXCollections.observableArrayList();
+
+        for (Grade g : gradeList) {
+            String studentID = g.getStudentID().toLowerCase();
+            String studentName = allStudents.stream()
+                    .filter(s -> s.getStudentID().equals(g.getStudentID()))
+                    .map(Student::getStudentName)
+                    .findFirst()
+                    .orElse("")
+                    .toLowerCase();
+
+            if (studentID.contains(keyword) || studentName.contains(keyword)) {
+                filteredList.add(g);
+            }
+        }
+        tableGrades.setItems(filteredList);
+    }
+
+    // 2. Xem Phúc khảo
+    @FXML
+    public void handleViewReviews(ActionEvent event) {
+        CourseClass selectedClass = cbClass.getValue();
+        if (selectedClass == null) {
+            showAlert(Alert.AlertType.WARNING, "Chưa chọn lớp", "Vui lòng chọn lớp học phần để xem yêu cầu phúc khảo!");
+            return;
+        }
+
+        List<ReviewRequest> requests = reviewRequestDAO.getRequestsByClass(selectedClass.getCourseClassId());
+        System.out.println("Tìm thấy: " + requests.size() + " yêu cầu.");
+        
+        if (requests.isEmpty()) {
+            showAlert(Alert.AlertType.INFORMATION, "Không có dữ liệu", "Lớp này hiện chưa có yêu cầu phúc khảo nào.");
+            return;
+        }
+
+        StringBuilder content = new StringBuilder();
+        content.append("DANH SÁCH YÊU CẦU PHÚC KHẢO\n");
+        content.append("Lớp: ").append(selectedClass.getClassName()).append("\n");
+        content.append("=========================================\n\n");
+
+        for (ReviewRequest req : requests) {
+            String studentName = "Unknown";
+            try {
+                studentName = studentDAO.getAllStudents().stream()
+                        .filter(s -> s.getStudentID().equals(req.getStudentID()))
+                        .findFirst().map(Student::getStudentName).orElse("Unknown");
+            } catch (Exception e) {}
+
+            content.append("• Sinh viên: ").append(studentName).append(" (").append(req.getStudentID()).append(")\n");
+            content.append("  Lý do: ").append(req.getReason()).append("\n");
+            content.append("  Ngày gửi: ").append(req.getRequestDate()).append("\n");
+            content.append("-----------------------------------------\n");
+        }
+        System.out.println("Đang tìm phúc khảo cho lớp: " + selectedClass.getCourseClassId());
+
+        TextArea textArea = new TextArea(content.toString());
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setPrefSize(400, 300);
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Danh sách Phúc khảo");
+        alert.setHeaderText("Yêu cầu từ sinh viên");
+        alert.getDialogPane().setContent(textArea);
+        alert.showAndWait();
+    }
+
+    // 3. Lưu điểm (Kèm Audit Log)
+    @FXML
+    public void handleSaveGrades() {
+        if (gradeList.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Trống", "Không có dữ liệu để lưu.");
+            return;
+        }
+
+        boolean allSuccess = true;
+        int count = 0;
+
+        for (Grade g : gradeList) {
+            if (gradeDAO.updateGrade(g)) {
+                count++;
+            } else {
+                allSuccess = false;
+            }
+        }
+
+        if (allSuccess) {
+            // --- GHI LOG ---
+            CourseClass currentClass = cbClass.getValue();
+            String className = (currentClass != null) ? currentClass.getClassName() : "Unknown";
+
+            auditLogDAO.addLog(new AuditLog(
+                    CURRENT_PROFESSOR_ID,
+                    "NHẬP ĐIỂM",
+                    "Đã cập nhật điểm cho " + count + " sinh viên lớp " + className
+            ));
+            // ----------------
+
+            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã lưu bảng điểm thành công!");
+        } else {
+            showAlert(Alert.AlertType.ERROR, "Cảnh báo", "Có lỗi khi lưu một số dòng điểm.");
+        }
+    }
+
+    // 4. Các chức năng khác (Lịch, Điểm danh, Xuất file, Logout)
     @FXML
     public void handleViewSchedule(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(Main.class.getResource("professor_schedule.fxml"));
             Parent root = loader.load();
-
-            // Truyền ID giảng viên sang để load lịch đúng
             ProfessorScheduleController controller = loader.getController();
             controller.setProfessorID(CURRENT_PROFESSOR_ID);
-
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
             stage.setTitle("Lịch giảng dạy cá nhân");
-            stage.initModality(Modality.APPLICATION_MODAL); // Chặn cửa sổ cha
+            stage.initModality(Modality.APPLICATION_MODAL);
             stage.show();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Lỗi", "Không thể mở lịch giảng dạy: " + e.getMessage());
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
-    // 2. MỞ CỬA SỔ ĐIỂM DANH
     @FXML
     public void handleAttendance(ActionEvent event) {
         CourseClass selectedClass = cbClass.getValue();
@@ -269,6 +387,14 @@ public class ProfessorDashboardController implements Initializable {
             stage.setTitle("Điểm danh - " + selectedClass.getCourseClassId());
             stage.initModality(Modality.WINDOW_MODAL);
             stage.initOwner(((Node) event.getSource()).getScene().getWindow());
+
+            // --- ĐOẠN CODE QUAN TRỌNG CẦN THÊM ---
+            // Khi cửa sổ điểm danh đóng lại, tự động gọi hàm loadGrades() để cập nhật số buổi vắng
+            stage.setOnHiding(e -> {
+                loadGrades(); // Hàm này sẽ query lại DB và update bảng điểm + cột vắng
+            });
+            // -------------------------------------
+
             stage.show();
 
         } catch (IOException e) {
@@ -277,84 +403,36 @@ public class ProfessorDashboardController implements Initializable {
         }
     }
 
-    // 3. XUẤT FILE WORD
     @FXML
     public void handleExportList(ActionEvent event) {
         CourseClass selectedClass = cbClass.getValue();
         if (selectedClass == null || gradeList.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Không có dữ liệu", "Vui lòng chọn lớp và đảm bảo có dữ liệu để xuất.");
+            showAlert(Alert.AlertType.WARNING, "Không có dữ liệu", "Vui lòng chọn lớp và đảm bảo có dữ liệu.");
             return;
         }
-
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Lưu danh sách lớp");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Microsoft Word Document", "*.doc"));
         fileChooser.setInitialFileName("DanhSach_" + selectedClass.getCourseClassId() + ".doc");
-
         Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         File file = fileChooser.showSaveDialog(stage);
-
-        if (file != null) {
-            exportToWord(file, selectedClass);
-        }
+        if (file != null) exportToWord(file, selectedClass);
     }
 
     private void exportToWord(File file, CourseClass selectedClass) {
         try (PrintWriter writer = new PrintWriter(file, "UTF-8")) {
-            writer.println("<html><head><meta charset='UTF-8'>");
-            writer.println("<style>body { font-family: 'Times New Roman'; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid black; padding: 5px; text-align: center; } th { background-color: #f2f2f2; }</style></head><body>");
-
-            writer.println("<h2 style='text-align: center;'>BẢNG ĐIỂM CHI TIẾT</h2>");
-            writer.println("<p><b>Lớp học phần:</b> " + selectedClass.getCourseClassId() + " - " + selectedClass.getClassName() + "</p>");
-            writer.println("<p><b>Giảng viên:</b> " + lblProfName.getText() + "</p>");
-
-            writer.println("<table>");
-            writer.println("<tr><th>STT</th><th>Mã SV</th><th>Họ và Tên</th><th>ĐG 1</th><th>ĐG 2</th><th>Cuối kỳ</th><th>Tổng kết</th><th>Ghi chú</th></tr>");
-
+            writer.println("<html><head><meta charset='UTF-8'><style>body{font-family:'Times New Roman';} table{width:100%;border-collapse:collapse;} th,td{border:1px solid black;padding:5px;text-align:center;}</style></head><body>");
+            writer.println("<h2 style='text-align:center;'>BẢNG ĐIỂM CHI TIẾT</h2>");
+            writer.println("<p><b>Lớp:</b> " + selectedClass.getClassName() + "</p>");
+            writer.println("<table><tr><th>STT</th><th>Mã SV</th><th>Họ tên</th><th>ĐG1</th><th>ĐG2</th><th>Cuối kỳ</th><th>Tổng kết</th></tr>");
             int stt = 1;
             for (Grade g : gradeList) {
                 String name = colStudentName.getCellData(g);
-                writer.println("<tr>");
-                writer.println("<td>" + (stt++) + "</td>");
-                writer.println("<td>" + g.getStudentID() + "</td>");
-                writer.println("<td style='text-align: left;'>" + name + "</td>");
-                writer.println("<td>" + g.getGradeAssessment1() + "</td>");
-                writer.println("<td>" + g.getGradeAssessment2() + "</td>");
-                writer.println("<td>" + g.getGradeFinal() + "</td>");
-                writer.println("<td><b>" + g.getGradeAverage() + "</b></td>");
-                writer.println("<td>" + (g.getGradeNote() == null ? "" : g.getGradeNote()) + "</td>");
-                writer.println("</tr>");
+                writer.println("<tr><td>" + (stt++) + "</td><td>" + g.getStudentID() + "</td><td style='text-align:left;'>" + name + "</td><td>" + g.getGradeAssessment1() + "</td><td>" + g.getGradeAssessment2() + "</td><td>" + g.getGradeFinal() + "</td><td><b>" + g.getGradeAverage() + "</b></td></tr>");
             }
-            writer.println("</table>");
-            writer.println("</body></html>");
-
-            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã xuất file thành công!");
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Lỗi", "Không thể lưu file: " + e.getMessage());
-        }
-    }
-
-    // 4. LƯU ĐIỂM XUỐNG DB
-    @FXML
-    public void handleSaveGrades() {
-        if (gradeList.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Trống", "Không có dữ liệu để lưu.");
-            return;
-        }
-
-        boolean allSuccess = true;
-        for (Grade g : gradeList) {
-            if (!gradeDAO.updateGrade(g)) {
-                allSuccess = false;
-            }
-        }
-
-        if (allSuccess) {
-            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã lưu bảng điểm thành công!");
-        } else {
-            showAlert(Alert.AlertType.ERROR, "Cảnh báo", "Có lỗi khi lưu một số dòng điểm.");
-        }
+            writer.println("</table></body></html>");
+            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã xuất file!");
+        } catch (Exception e) { e.printStackTrace(); }
     }
 
     @FXML
@@ -364,12 +442,9 @@ public class ProfessorDashboardController implements Initializable {
             Parent root = loader.load();
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.setTitle("Hệ thống Quản lý Điểm - Đăng nhập");
             stage.centerOnScreen();
             stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {

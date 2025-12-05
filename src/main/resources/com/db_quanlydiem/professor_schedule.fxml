@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -13,7 +14,6 @@
 
 <BorderPane prefHeight="700.0" prefWidth="1100.0" style="-fx-background-color: #f5f6fa;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.db_quanlydiem.controller.ProfessorScheduleController">
 
-    <!-- HEADER -->
     <top>
         <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: linear-gradient(to right, #2c3e50, #3498db); -fx-padding: 20;" BorderPane.alignment="CENTER">
             <children>
@@ -24,10 +24,11 @@
                                 <Font name="System Bold" size="20.0" />
                             </font>
                         </Label>
-                        <Label text="Thời khóa biểu các lớp học phần đang phụ trách" textFill="#bdc3c7">
-                     <font>
-                        <Font size="13.0" />
-                     </font></Label>
+                        <Label text="Thời khóa biểu chi tiết theo từng ngày" textFill="#bdc3c7">
+                            <font>
+                                <Font size="13.0" />
+                            </font>
+                        </Label>
                     </children>
                 </VBox>
             </children>
@@ -37,19 +38,42 @@
         </HBox>
     </top>
 
-    <!-- TABLE CONTENT -->
     <center>
-        <VBox spacing="10.0" BorderPane.alignment="CENTER">
+        <VBox spacing="15.0" BorderPane.alignment="CENTER">
             <padding>
                 <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
             </padding>
             <children>
+
+                <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-background-color: white; -fx-padding: 10; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 0);">
+                    <children>
+                        <Label text="Chọn Lịch:">
+                            <font>
+                                <Font name="System Bold" size="14.0" />
+                            </font>
+                        </Label>
+                        <ComboBox fx:id="cbMonth" prefWidth="100.0" promptText="Tháng" style="-fx-font-size: 13px;" />
+                        <ComboBox fx:id="cbYear" prefWidth="120.0" promptText="Năm" style="-fx-font-size: 13px;" />
+                        <Button mnemonicParsing="false" onAction="#handleFilter" style="-fx-background-color: #27ae60; -fx-cursor: hand;" text="Xem Lịch" textFill="WHITE">
+                            <font>
+                                <Font name="System Bold" size="13.0" />
+                            </font>
+                        </Button>
+                        <Button mnemonicParsing="false" onAction="#handleViewAll" style="-fx-background-color: #3498db; -fx-cursor: hand;" text="Xem Tất Cả" textFill="WHITE">
+                            <font>
+                                <Font name="System Bold" size="13.0" />
+                            </font>
+                        </Button>
+                    </children>
+                </HBox>
+
                 <TableView fx:id="tableSchedule" style="-fx-background-radius: 5; -fx-base: white;" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="colDay" prefWidth="100.0" style="-fx-alignment: CENTER; -fx-font-weight: bold;" text="Thứ" />
-                        <TableColumn fx:id="colShift" prefWidth="120.0" style="-fx-alignment: CENTER;" text="Ca dạy" />
+                        <TableColumn fx:id="colDate" prefWidth="150.0" style="-fx-alignment: CENTER; -fx-font-weight: bold;" text="Ngày/Tháng/Năm" />
+                        <TableColumn fx:id="colDay" prefWidth="100.0" style="-fx-alignment: CENTER;" text="Thứ" />
+                        <TableColumn fx:id="colShift" prefWidth="100.0" style="-fx-alignment: CENTER;" text="Ca dạy" />
                         <TableColumn fx:id="colClassID" prefWidth="120.0" text="Mã Lớp" />
-                        <TableColumn fx:id="colSubjectName" prefWidth="250.0" text="Tên Môn Học" />
+                        <TableColumn fx:id="colSubjectName" prefWidth="300.0" text="Tên Môn Học" />
                         <TableColumn fx:id="colRoom" prefWidth="100.0" style="-fx-alignment: CENTER; -fx-text-fill: #e67e22; -fx-font-weight: bold;" text="Phòng" />
                     </columns>
                     <columnResizePolicy>
@@ -60,7 +84,6 @@
         </VBox>
     </center>
 
-    <!-- FOOTER -->
     <bottom>
         <HBox alignment="CENTER_RIGHT" style="-fx-padding: 15; -fx-background-color: white; -fx-border-color: #bdc3c7; -fx-border-width: 1 0 0 0;" BorderPane.alignment="CENTER">
             <children>

@@ -11,7 +11,14 @@ public class GradeDAO {
     // Lấy bảng điểm của một lớp học phần cụ thể
     public List<Grade> getGradesByClass(String courseClassID) {
         List<Grade> list = new ArrayList<>();
-        String sql = "SELECT * FROM Grade WHERE CourseClassID = ?";
+
+        // CẬP NHẬT SQL: Đếm số buổi vắng từ bảng ATTENDANCE (IsPresent = 0)
+        String sql = "SELECT g.*, " +
+                "(SELECT COUNT(*) FROM ATTENDANCE a " +
+                " WHERE a.StudentID = g.StudentID " +
+                " AND a.CourseClassID = g.CourseClassID " +
+                " AND a.IsPresent = 0) AS AbsentCount " +
+                "FROM Grade g WHERE g.CourseClassID = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -20,6 +27,10 @@ public class GradeDAO {
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
+                // Debug để kiểm tra dữ liệu lấy lên
+                int absent = rs.getInt("AbsentCount");
+                // System.out.println("SV: " + rs.getString("StudentID") + " - Vắng: " + absent);
+
                 list.add(new Grade(
                         rs.getString("StudentID"),
                         rs.getString("CourseClassID"),
@@ -28,7 +39,8 @@ public class GradeDAO {
                         rs.getDouble("GradeAssessment2"),
                         rs.getDouble("GradeFinal"),
                         rs.getDouble("GradeAverage"),
-                        rs.getString("GradeNote")
+                        rs.getString("GradeNote"),
+                        absent // Truyền số buổi vắng vào constructor mới
                 ));
             }
         } catch (SQLException e) {
@@ -57,7 +69,7 @@ public class GradeDAO {
 
     // Cập nhật điểm số (Chức năng nhập điểm của GV)
     public boolean updateGrade(Grade g) {
-        // Tự động tính điểm trung bình trước khi lưu (Ví dụ: 30% - 20% - 50%)
+        // Tự động tính điểm trung bình trước khi lưu (30% - 20% - 50%)
         double avg = (g.getGradeAssessment1() * 0.3) + (g.getGradeAssessment2() * 0.2) + (g.getGradeFinal() * 0.5);
 
         String sql = "UPDATE Grade SET GradeAssessment1 = ?, GradeAssessment2 = ?, GradeFinal = ?, GradeAverage = ?, GradeNote = ? WHERE StudentID = ? AND CourseClassID = ?";

@@ -58,6 +58,11 @@ public class AdminDashboardController {
         switchScene(event, "admin_tuition_management.fxml", "Cấu hình Học phí");
     }
 
+    @FXML
+    public void handleAuditLog(ActionEvent event) {
+        switchScene(event, "admin_audit_log.fxml", "Nhật ký hoạt động hệ thống");
+    }
+
     // --- XỬ LÝ ĐĂNG XUẤT ---
     @FXML
     public void handleLogout(ActionEvent event) {

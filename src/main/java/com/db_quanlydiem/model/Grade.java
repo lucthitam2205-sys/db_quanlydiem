@@ -9,8 +9,9 @@ public class Grade {
     private double gradeFinal;
     private double gradeAverage;
     private String gradeNote;
+    private int absentCount;
 
-    public Grade(String studentID, String courseClassID, String semesterID, double gradeAssessment1, double gradeAssessment2, double gradeFinal, double gradeAverage, String gradeNote) {
+    public Grade(String studentID, String courseClassID, String semesterID, double gradeAssessment1, double gradeAssessment2, double gradeFinal, double gradeAverage, String gradeNote, int absentCount) {
         this.studentID = studentID;
         this.courseClassID = courseClassID;
         this.semesterID = semesterID;
@@ -19,6 +20,16 @@ public class Grade {
         this.gradeFinal = gradeFinal;
         this.gradeAverage = gradeAverage;
         this.gradeNote = gradeNote;
+        this.absentCount = absentCount;
+    }
+
+    // JavaFX sẽ tìm hàm này khi bạn gọi PropertyValueFactory("absentCount")
+    public int getAbsentCount() {
+        return absentCount;
+    }
+
+    public void setAbsentCount(int absentCount) {
+        this.absentCount = absentCount;
     }
 
     public String getStudentID() { return studentID; }

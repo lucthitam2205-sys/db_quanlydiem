@@ -32,7 +32,7 @@ public class LoginController {
             return;
         }
 
-        // 1. Kiểm tra thông tin đăng nhập từ CSDL
+        // 1. Kiểm tra thông tin đăng nhập
         String roleFromDB = accountDAO.checkLogin(username, password);
 
         if (roleFromDB == null) {
@@ -40,11 +40,11 @@ public class LoginController {
             return;
         }
 
-        // 2. Kiểm tra vai trò (Fix lỗi: So sánh cả tiếng Việt và tiếng Anh)
+        // 2. Kiểm tra vai trò
         String selectedRole = getSelectedRole();
         boolean isRoleMatch = false;
 
-        // Logic so sánh linh hoạt hơn
+        // Logic so sánh (Hỗ trợ cả tiếng Anh và tiếng Việt)
         if (selectedRole.equals("Sinh viên") && (roleFromDB.equalsIgnoreCase("Student") || roleFromDB.equalsIgnoreCase("Sinh viên"))) {
             isRoleMatch = true;
         }
@@ -60,11 +60,10 @@ public class LoginController {
             return;
         }
 
-        // 3. Chuyển hướng (Fix lỗi: Switch case nhận cả tiếng Việt)
+        // 3. Chuyển hướng và TRUYỀN DỮ LIỆU NGƯỜI DÙNG
         String dashboardFXML = "";
         String title = "";
 
-        // Chuyển roleFromDB về dạng chuẩn để switch
         if (roleFromDB.equalsIgnoreCase("Giảng viên")) roleFromDB = "Professor";
         if (roleFromDB.equalsIgnoreCase("Sinh viên")) roleFromDB = "Student";
 
@@ -73,16 +72,23 @@ public class LoginController {
                 dashboardFXML = "admin_dashboard.fxml";
                 title = "Hệ thống Quản trị Đào tạo (Admin)";
                 break;
+
             case "Professor":
                 dashboardFXML = "professor_dashboard.fxml";
                 title = "Cổng thông tin Giảng viên";
+
+                // --- QUAN TRỌNG: CẬP NHẬT DÒNG NÀY ĐỂ TRUYỀN ID GIẢNG VIÊN ---
+                ProfessorDashboardController.CURRENT_PROFESSOR_ID = username;
+                // -------------------------------------------------------------
                 break;
+
             case "Student":
                 dashboardFXML = "student_dashboard.fxml";
                 title = "Cổng thông tin Sinh viên";
-                // Lưu ID sinh viên đăng nhập để dùng bên Dashboard
+                // Truyền ID Sinh viên (đã làm trước đó)
                 StudentDashboardController.CURRENT_STUDENT_ID = username;
                 break;
+
             default:
                 showAlert("Lỗi", "Không xác định được giao diện cho quyền: " + roleFromDB);
                 return;

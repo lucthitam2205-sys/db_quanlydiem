@@ -2,7 +2,9 @@ package com.db_quanlydiem.controller;
 
 import com.db_quanlydiem.Main;
 import com.db_quanlydiem.dao.AccountDAO;
+import com.db_quanlydiem.dao.AuditLogDAO; // Import DAO Log
 import com.db_quanlydiem.model.Account;
+import com.db_quanlydiem.model.AuditLog; // Import Model Log
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -31,7 +33,11 @@ public class AdminAccountController implements Initializable {
     @FXML private ComboBox<String> cbRole;
 
     private AccountDAO accountDAO = new AccountDAO();
+    private AuditLogDAO auditLogDAO = new AuditLogDAO(); // Khởi tạo DAO Log
     private ObservableList<Account> accountList = FXCollections.observableArrayList();
+
+    // Giả định người dùng hiện tại là admin (Trong thực tế bạn lấy từ Session/LoginController)
+    private final String CURRENT_USER = "admin";
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -61,7 +67,7 @@ public class AdminAccountController implements Initializable {
     private void fillForm(Account a) {
         txtUsername.setText(a.getUsername());
         txtUsername.setDisable(true); // Không cho sửa tên đăng nhập
-        txtPassword.clear(); // Không hiện password cũ vì bảo mật (hoặc đã hash)
+        txtPassword.clear();
         txtPassword.setPromptText("Nhập nếu muốn đổi pass");
         cbRole.setValue(a.getRoleName());
     }
@@ -95,12 +101,20 @@ public class AdminAccountController implements Initializable {
 
         Account a = new Account(
                 txtUsername.getText(),
-                txtPassword.getText(), // Trong thực tế nên hash password ở đây
+                txtPassword.getText(),
                 cbRole.getValue(),
                 null // CreatedDate sẽ do DB tự tạo
         );
 
         if (accountDAO.addAccount(a)) {
+            // --- GHI LOG ---
+            auditLogDAO.addLog(new AuditLog(
+                    CURRENT_USER,
+                    "THÊM TÀI KHOẢN",
+                    "Đã tạo tài khoản mới: " + a.getUsername() + " (Quyền: " + a.getRoleName() + ")"
+            ));
+            // ----------------
+
             showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã tạo tài khoản mới!");
             handleRefresh();
         } else {
@@ -113,8 +127,6 @@ public class AdminAccountController implements Initializable {
         Account selected = tableAccount.getSelectionModel().getSelectedItem();
         if (selected == null) return;
 
-        // Nếu trường password trống -> Giữ nguyên pass cũ (Logic này cần DAO hỗ trợ hoặc xử lý ở đây)
-        // Ở đây demo đơn giản: Bắt buộc nhập pass mới hoặc pass cũ để update
         if (txtPassword.getText().isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Chú ý", "Vui lòng nhập mật khẩu (mới hoặc cũ) để xác nhận cập nhật.");
             return;
@@ -128,6 +140,14 @@ public class AdminAccountController implements Initializable {
         );
 
         if (accountDAO.updateAccount(a)) {
+            // --- GHI LOG ---
+            auditLogDAO.addLog(new AuditLog(
+                    CURRENT_USER,
+                    "CẬP NHẬT TÀI KHOẢN",
+                    "Đã cập nhật thông tin cho tài khoản: " + a.getUsername() + " (Quyền mới: " + a.getRoleName() + ")"
+            ));
+            // ----------------
+
             showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã cập nhật tài khoản!");
             handleRefresh();
         } else {
@@ -155,6 +175,14 @@ public class AdminAccountController implements Initializable {
 
         if (result.isPresent() && result.get() == ButtonType.OK) {
             if (accountDAO.deleteAccount(selected.getUsername())) {
+                // --- GHI LOG ---
+                auditLogDAO.addLog(new AuditLog(
+                        CURRENT_USER,
+                        "XÓA TÀI KHOẢN",
+                        "Đã xóa vĩnh viễn tài khoản: " + selected.getUsername()
+                ));
+                // ----------------
+
                 showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã xóa tài khoản.");
                 handleRefresh();
             } else {
@@ -182,24 +210,19 @@ public class AdminAccountController implements Initializable {
     @FXML
     public void handleBack() {
         try {
-            // Load lại trang Admin Dashboard
             FXMLLoader loader = new FXMLLoader(Main.class.getResource("admin_dashboard.fxml"));
             Parent root = loader.load();
-
-            // Lấy Stage hiện tại từ một node bất kỳ (ví dụ bảng)
             Stage stage = (Stage) tableAccount.getScene().getWindow();
-
-            // Chuyển cảnh
             stage.setScene(new Scene(root));
             stage.setTitle("Hệ thống Quản trị Đào tạo (Admin)");
             stage.centerOnScreen();
             stage.show();
-
         } catch (IOException e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi điều hướng", "Không thể quay về Dashboard: " + e.getMessage());
         }
     }
+
     private void showAlert(Alert.AlertType type, String title, String msg) {
         Alert a = new Alert(type); a.setTitle(title); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
     }

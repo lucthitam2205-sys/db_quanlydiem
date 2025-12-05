@@ -3,10 +3,10 @@ package com.db_quanlydiem.model;
 import java.sql.Timestamp;
 
 public class Account {
-    private String username;
-    private String password;
-    private String roleName;
-    private Timestamp createdDate;
+    private String username;  // Tên đăng nhập hệ thống
+    private String password;  // Mật khẩu đăng nhập
+    private String roleName;  // Tên vai trò/Quyền hạn
+    private Timestamp createdDate;  // Ngày giờ tạo tài khoản
 
     public Account(String username, String password, String roleName, Timestamp createdDate) {
         this.username = username;

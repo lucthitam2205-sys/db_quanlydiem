@@ -35,6 +35,7 @@ public class AttendanceController implements Initializable {
     private CourseClassDAO courseClassDAO = new CourseClassDAO(); // Lấy thông tin lớp & học kỳ
     private SemesterDAO semesterDAO = new SemesterDAO();         // Lấy ngày bắt đầu/kết thúc
     private ClassScheduleDAO scheduleDAO = new ClassScheduleDAO(); // Lấy thứ/ca học
+    private AttendanceDAO attendanceDAO = new AttendanceDAO();
 
     private ObservableList<AttendanceViewModel> attendanceList = FXCollections.observableArrayList();
     private String courseClassID;
@@ -158,29 +159,78 @@ public class AttendanceController implements Initializable {
         }
     }
 
+    private void reloadAttendanceStatus() {
+        String sessionStr = cbSession.getValue();
+        if (sessionStr == null || courseClassID == null) return;
+
+        // Tách lấy ngày từ chuỗi "dd/MM/yyyy (...)"
+        String datePart = sessionStr.split(" ")[0];
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDate date = LocalDate.parse(datePart, formatter);
+
+        for (AttendanceViewModel item : attendanceList) {
+            // Lấy trạng thái từ DB
+            int status = attendanceDAO.getAttendanceStatus(item.getStudentID(), courseClassID, date);
+            String note = attendanceDAO.getAttendanceNote(item.getStudentID(), courseClassID, date);
+
+            if (status != -1) {
+                // Nếu đã có dữ liệu -> Cập nhật lên giao diện
+                item.setPresent(status == 1);
+                item.setNote(note);
+            } else {
+                // Nếu chưa có -> Mặc định là Có mặt (true) và note rỗng
+                item.setPresent(true);
+                item.setNote("");
+            }
+        }
+        tableAttendance.refresh();
+    }
     @FXML
     public void saveAttendance() {
-        String session = cbSession.getValue();
-        if (session == null || session.isEmpty()) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Chưa chọn buổi");
-            alert.setContentText("Vui lòng chọn buổi học trong danh sách để điểm danh!");
-            alert.showAndWait();
+        String sessionStr = cbSession.getValue();
+        if (sessionStr == null || sessionStr.isEmpty()) {
+            showAlert("Vui lòng chọn buổi học trước khi lưu!");
             return;
         }
 
+        // Tách ngày để lưu vào DB
+        String datePart = sessionStr.split(" ")[0];
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDate saveDate = LocalDate.parse(datePart, formatter);
+
+        // --- BIẾN ĐẾM MỚI ---
         int presentCount = 0;
         int absentCount = 0;
-        for (AttendanceViewModel a : attendanceList) {
-            if (a.isPresent()) presentCount++; else absentCount++;
+        // --------------------
+
+        for (AttendanceViewModel item : attendanceList) {
+            boolean success = attendanceDAO.saveOrUpdateAttendance(
+                    item.getStudentID(),
+                    courseClassID,
+                    saveDate,
+                    item.isPresent(),
+                    item.getNote()
+            );
+
+            // --- LOGIC ĐẾM ---
+            if (success) {
+                if (item.isPresent()) {
+                    presentCount++;
+                } else {
+                    absentCount++;
+                }
+            }
+            // -----------------
         }
 
-        // Logic lưu DB (Hiện tại thông báo giả lập)
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Lưu thành công");
-        alert.setHeaderText("Đã lưu điểm danh cho: " + session);
-        alert.setContentText(String.format("Tổng số: %d\nCó mặt: %d\nVắng: %d",
-                attendanceList.size(), presentCount, absentCount));
+        alert.setTitle("Thành công");
+        alert.setHeaderText("Đã lưu dữ liệu điểm danh!");
+
+        // --- NỘI DUNG THÔNG BÁO MỚI ---
+        alert.setContentText("Có mặt: " + presentCount + ", Vắng: " + absentCount + " sinh viên.");
+        // ------------------------------
+
         alert.showAndWait();
 
         closeWindow();
@@ -191,7 +241,9 @@ public class AttendanceController implements Initializable {
         Stage stage = (Stage) lblClassName.getScene().getWindow();
         stage.close();
     }
-
+    private void showAlert(String msg) {
+        new Alert(Alert.AlertType.WARNING, msg).showAndWait();
+    }
     // ViewModel cho TableView
     public static class AttendanceViewModel {
         private final SimpleStringProperty studentID;

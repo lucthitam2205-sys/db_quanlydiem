@@ -3,18 +3,18 @@ package com.db_quanlydiem.model;
 import java.sql.Date;
 
 public class Student {
-    private String studentID;
-    private String studentName;
-    private Date studentDOB;
-    private String studentGender;
-    private String studentCohort;
-    private String studentMajor;
-    private String studentEmail;
-    private String studentPhone;
-    private String studentHometown;
-    private String parentName;
-    private String parentPhone;
-    private String studentStatus;
+    private String studentID; // Mã số sinh viên
+    private String studentName; // Họ và tên đầy đủ của sinh viên
+    private Date studentDOB;  // Ngày tháng năm sinh của sinh viên
+    private String studentGender; // Giới tính của sinh viên
+    private String studentCohort; // Khóa nhập học (Ví dụ: K66, K67..
+    private String studentMajor;  // Chuyên ngành học (Ví dụ: Công nghệ thông tin,..)
+    private String studentEmail;  // Địa chỉ Email liên lạc của sinh viên
+    private String studentPhone;  // Số điện thoại cá nhân của sinh viên
+    private String studentHometown; // Quê quán hoặc địa chỉ thường trú
+    private String parentName;  // Họ tên phụ huynh
+    private String parentPhone;  // Số điện thoại của phụ huynh
+    private String studentStatus; // Trạng thái học tập
 
     // Constructor
     public Student(String studentID, String studentName, Date studentDOB, String studentGender,
@@ -39,8 +39,6 @@ public class Student {
     // Getter & Setter
     public String getStudentCohort() { return studentCohort; }
     public void setStudentCohort(String studentCohort) { this.studentCohort = studentCohort; }
-
-    // ... Các Getter/Setter khác giữ nguyên ...
     public String getStudentID() { return studentID; }
     public void setStudentID(String studentID) { this.studentID = studentID; }
     public String getStudentName() { return studentName; }
